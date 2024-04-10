@@ -2,6 +2,7 @@ if __name__ == "__main__":
     import argparse
     import sys
     import json
+    from typing import List
 
     from colorama import Fore as F
 
@@ -10,6 +11,7 @@ if __name__ == "__main__":
 
     from rtsm.predictors.logistic_boolean_predictor import LogisticBooleanPredictor
 
+    from rtsm.solvers.solver import Solver
     from rtsm.solvers.bisect_solver import BisectSolver
     from rtsm.solvers.rs_solver import RandomSamplingSolver
 
@@ -23,7 +25,7 @@ if __name__ == "__main__":
     predictors = {"logistic-bool": LogisticBooleanPredictor}
 
     # Solvers
-    __solver_list__ = [BisectSolver(), RandomSamplingSolver()]
+    __solver_list__: List[Solver] = [BisectSolver(), RandomSamplingSolver()]
     solvers = {solver.get_name(): solver for solver in __solver_list__}
 
     parser = argparse.ArgumentParser(description="Ranked test suite minimisation")
@@ -44,6 +46,10 @@ if __name__ == "__main__":
         default=list(solvers.keys())[0],
         help=f"solver to use, default: {list(solvers.keys())[0]}",
     )
+
+    group = parser.add_argument_group("sampling algorithms (rs, bisect)")
+    group.add_argument("--samples", type=int, default=10000, help="number of samples, default: 10000")
+
     parser.add_argument("-q", "--quiet", action="store_true")
 
     parser.add_argument(
@@ -66,6 +72,8 @@ if __name__ == "__main__":
     verbose: bool = not args.quiet
     procs: int = args.procs
 
+    samples: int = args.samples
+
     # Check then load data
     loaders = [d for d in data_loaders if d.match(args.file)]
     if len(loaders) == 0:
@@ -78,8 +86,8 @@ if __name__ == "__main__":
         )
         if not instance.check_filled():
             print(
-            f"{F.YELLOW}warning:{F.RESET} the performance matrix is not completely filled!"
-        )
+                f"{F.YELLOW}warning:{F.RESET} the performance matrix is not completely filled!"
+            )
 
     # Build predictor
     predictor = predictors[args.predictor](instance)
@@ -92,7 +100,9 @@ if __name__ == "__main__":
         print(f"solver: {F.CYAN}{solver.get_name()}{F.RESET}")
 
     # Solve
-    solutions = solver.solve(instance, predictor, verbose, procs, verbose)
+    solutions = solver.solve(
+        instance, predictor, verbose, procs, verbose=verbose, samples=samples
+    )
     if verbose:
         if len(solutions) == 0:
             print(f"found {F.RED}no solution{F.RESET}")
