@@ -42,7 +42,7 @@ def __sample__(
         selected = rng.choice(choices, n, replace=False)
         current = [i in selected for i in range(size)]
         if predictor.can_predict(current):
-            return True, used + 1, current
+            return True, used + 1, tuple(current)
     return False, max_samples, tuple()
 
 
@@ -62,6 +62,7 @@ class RandomSamplingSolver(Solver):
         use_tqdm: bool = False,
         nprocs: int = 1,
         samples: int = 10000,
+        **kwargs,
     ) -> Set[Solution]:
         """
         Try to solve an instance of RTSM and provides a set of solutions.

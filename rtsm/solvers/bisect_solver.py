@@ -159,6 +159,7 @@ class BisectSolver(Solver):
         nprocs: int = 1,
         verbose: bool = False,
         samples: int = 10000,
+        **kwargs,
     ) -> Set[Solution]:
         """
         Try to solve an instance of RTSM and provides a set of solutions.
