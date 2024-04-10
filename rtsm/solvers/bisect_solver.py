@@ -4,6 +4,8 @@ from typing import Generator, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import tqdm
+from colorama import Fore as F
+
 
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
@@ -131,7 +133,9 @@ def __new_sol__(
     score = sum(sol)
     if score < current_best:
         if pbar is not None:
-            pbar.set_postfix_str(f"best: {current_best} ({current_best/len(sol):.1%})")
+            pbar.set_postfix_str(
+                f"best: {F.LIGHTYELLOW_EX}{score}{F.RESET} ({F.LIGHTYELLOW_EX}{score/len(sol):.1%}{F.RESET})"
+            )
         solutions.clear()
         solutions.add(sol)
         return score
@@ -174,7 +178,7 @@ class BisectSolver(Solver):
         unfixed = len(must_keep) - n_kept - (len(init) - sum(init))
         if verbose:
             print(
-                f"[info] top level:\n\tbest possible solution: {n_kept} ({n_kept / len(must_keep):.1%})\n\tnot fixed: {unfixed} ({unfixed / len(must_keep):.1%})"
+                f"{F.LIGHTBLUE_EX}[info]{F.RESET} top level:\n\tbest possible solution: {F.LIGHTCYAN_EX}{n_kept}{F.RESET} ({F.LIGHTCYAN_EX}{n_kept / len(must_keep):.1%}{F.RESET})\n\tnot fixed: {F.LIGHTCYAN_EX}{unfixed}{F.RESET} ({F.LIGHTCYAN_EX}{unfixed / len(must_keep):.1%}{F.RESET})"
             )
         best_sol = {init}
         best_possible = n_kept
