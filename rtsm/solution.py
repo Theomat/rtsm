@@ -1,17 +1,17 @@
-from dataclasses import dataclass
-from typing import List, Set
+from dataclasses import dataclass, field
+from typing import List, Set, Tuple
 
 from rtsm.instance import Instance
 
 
-@dataclass
+@dataclass(frozen=True)
 class Solution:
     """
     Represents a solution to an instance of the RTSM problem.
     """
 
-    instance: Instance
-    tests: List[str]
+    instance: Instance = field(hash=False)
+    tests: Tuple[str]
 
     def cost(self) -> int:
         """
