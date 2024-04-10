@@ -47,7 +47,11 @@ if __name__ == "__main__":
     parser.add_argument("-q", "--quiet", action="store_true")
 
     parser.add_argument(
-        "-p", "--procs", type=int, default=1, help="number of processors to use, default: 1"
+        "-p",
+        "--procs",
+        type=int,
+        default=1,
+        help="number of processors to use, default: 1",
     )
     parser.add_argument(
         "-o",
@@ -71,6 +75,10 @@ if __name__ == "__main__":
     if verbose:
         print(
             f"loaded {F.CYAN}{len(instance.variants)}{F.RESET} variants and {F.CYAN}{len(instance.tests)}{F.RESET} tests"
+        )
+        if not instance.check_filled():
+            print(
+            f"{F.YELLOW}warning:{F.RESET} the performance matrix is not completely filled!"
         )
 
     # Build predictor
