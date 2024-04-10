@@ -69,7 +69,7 @@ class RandomSamplingSolver(Solver):
         """
         SAMPLING_UNIT = 100
         n = len(instance.tests)
-        init = tuple(False for _ in range(n))
+        init = tuple(True for _ in range(n))
         best_sol = {init}
         best_cost = n
 
@@ -122,6 +122,8 @@ class RandomSamplingSolver(Solver):
                     best_cost - 1, n, predictor, budget, min(SAMPLING_UNIT, budget)
                 )
                 budget -= used
+                if use_tqdm:
+                    pbar.update(used)
                 if not has_found:
                     continue
                 solutions[sum(out)] += 1
@@ -133,4 +135,5 @@ class RandomSamplingSolver(Solver):
                 )
         if use_tqdm:
             pbar.close()
-        return {Solution(instance, instance.get_tests(sol)) for sol in solutions}
+
+        return {Solution(instance, tuple(instance.get_tests(sol))) for sol in best_sol}

@@ -166,7 +166,7 @@ class BisectSolver(Solver):
         """
         n = len(instance.tests)
         initial_best = n
-        init = tuple(False for _ in range(n))
+        init = tuple(True for _ in range(n))
         must_keep = __find_necessary__(init, tuple(False for _ in range(n)), predictor)[
             0
         ]
@@ -234,7 +234,7 @@ class BisectSolver(Solver):
                 if improvement_queue:
                     out = __improve_upon__(
                         improvement_queue.pop(),
-                        queued,
+                        i,
                         predictor,
                     )
                 else:
@@ -249,4 +249,4 @@ class BisectSolver(Solver):
                 )
                 if initial_best <= best_possible:
                     break
-        return {Solution(instance, instance.get_tests(sol)) for sol in solutions}
+        return {Solution(instance, tuple(instance.get_tests(sol))) for sol in best_sol}
