@@ -48,7 +48,9 @@ if __name__ == "__main__":
     )
 
     group = parser.add_argument_group("sampling algorithms (rs, bisect)")
-    group.add_argument("--samples", type=int, default=10000, help="number of samples, default: 10000")
+    group.add_argument(
+        "--samples", type=int, default=10000, help="number of samples, default: 10000"
+    )
 
     parser.add_argument("-q", "--quiet", action="store_true")
 
