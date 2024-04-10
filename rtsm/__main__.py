@@ -111,7 +111,9 @@ if __name__ == "__main__":
         else:
             best_cost = min(sol.cost() for sol in solutions)
             print(f"found {F.GREEN}{len(solutions)}{F.RESET} solutions")
-            print(f"the minimal cost solution found is {F.GREEN}{best_cost}{F.RESET} ({F.GREEN}{best_cost/ len(instance.tests):.2%}{F.RESET})")
+            print(
+                f"the minimal cost solution found is {F.GREEN}{best_cost}{F.RESET} ({F.GREEN}{best_cost/ len(instance.tests):.2%}{F.RESET})"
+            )
 
     # Save solution
     with open(args.output, "w") as fd:
