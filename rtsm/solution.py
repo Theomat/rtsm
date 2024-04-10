@@ -21,4 +21,4 @@ class Solution:
 
     @classmethod
     def to_json(cls, solutions: Set["Solution"]) -> List[List[str]]:
-        return [sol.tests for sol in solutions]
+        return [sorted(sol.tests) for sol in solutions]
