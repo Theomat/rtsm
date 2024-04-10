@@ -1,0 +1,2 @@
+from rtsm.predictors.predictor import Predictor
+from rtsm.predictors.logistic_boolean_predictor import LogisticBooleanPredictor
