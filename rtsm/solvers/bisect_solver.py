@@ -244,7 +244,7 @@ class BisectSolver(Solver):
                     initial_best,
                     best_sol,
                     improvement_queue,
-                    pbar if use_tqdm else None,
+                    None,
                 )
                 if initial_best <= best_possible:
                     break
