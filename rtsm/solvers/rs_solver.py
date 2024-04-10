@@ -4,6 +4,7 @@ from typing import Optional, Set, Tuple, Union
 
 import numpy as np
 import tqdm
+from colorama import Fore as F
 
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
@@ -20,7 +21,9 @@ def __new_sol__(
     score = sum(sol)
     if score < current_best:
         if pbar is not None:
-            pbar.set_postfix_str(f"best: {current_best} ({current_best/len(sol):.1%})")
+            pbar.set_postfix_str(
+                f"best: {F.LIGHTYELLOW_EX}{score}{F.RESET} ({F.LIGHTYELLOW_EX}{score/len(sol):.1%}{F.RESET})"
+            )
         solutions.clear()
         solutions.add(sol)
         return score
@@ -82,10 +85,9 @@ class RandomSamplingSolver(Solver):
             pool = ProcessPoolExecutor(nprocs)
             futures = []
             # Find best among possible children
-            total_done = 0
             queued = 0
-            while total_done < samples:
-                while len(futures) < nprocs and budget < samples:
+            while budget > 0:
+                while len(futures) < nprocs:
                     futures.append(
                         pool.submit(
                             __sample__,
@@ -99,7 +101,6 @@ class RandomSamplingSolver(Solver):
                     queued += 1
                 done, _ = wait(futures, return_when="FIRST_COMPLETED")
                 for future in done:
-                    total_done += 1
                     has_found, used, out = future.result()
                     futures.remove(future)
                     budget -= used
