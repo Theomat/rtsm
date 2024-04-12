@@ -27,7 +27,7 @@ def ranking_error(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
 
 
 class Predictor(ABC):
-    def __init__(self, instance: Instance) -> None:
+    def __init__(self, instance: Instance, **kwargs) -> None:
         self.instance = instance
 
     @abstractmethod

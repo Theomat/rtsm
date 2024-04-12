@@ -25,7 +25,7 @@ class LogisticBooleanPredictor(Predictor):
     A predictor that predicts boolean results using logistic regression.
     """
 
-    def __init__(self, instance: Instance) -> None:
+    def __init__(self, instance: Instance, **kwargs) -> None:
         self.instance = instance
         self.Xt = instance.performance_matrix.copy()
         self.Yt = self.Xt.copy()
