@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Set, Tuple
+from typing import Any, Set
 
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
@@ -25,5 +25,13 @@ class Solver(ABC):
     ) -> Set[Solution]:
         """
         Try to solve an instance of RTSM and provides a set of solutions.
+        """
+        pass
+
+    @abstractmethod
+    def early_exit(self) -> Set[Solution]:
+        """
+        Called when when the solving is exited before solve has finished.
+        All resources should be freed and the current solution should be returned.
         """
         pass

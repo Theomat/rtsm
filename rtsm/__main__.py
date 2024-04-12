@@ -3,6 +3,7 @@ if __name__ == "__main__":
     import sys
     import json
     from typing import List, Dict, Callable
+    import atexit
 
     from colorama import Fore as F
 
@@ -119,6 +120,15 @@ if __name__ == "__main__":
     solver = solvers[args.solver]
     if verbose:
         print(f"solver: {F.CYAN}{solver.get_name()}{F.RESET}")
+
+    # Anytime solving
+    def save_result_pre_emptively():
+        sols = solver.early_exit()
+        print(f"{F.YELLOW}warning:{F.RESET} early stopping, results were still saved!")
+        with open(args.output, "w") as fd:
+            json.dump(Solution.to_json(sols), fd)
+
+    atexit.register(save_result_pre_emptively)
 
     # Solve
     solutions = solver.solve(

@@ -168,6 +168,7 @@ class BisectSolver(Solver):
         """
         Try to solve an instance of RTSM and provides a set of solutions.
         """
+        self.instance = instance
         n = len(instance.tests)
         initial_best = n
         init = tuple(True for _ in range(n))
@@ -180,7 +181,7 @@ class BisectSolver(Solver):
             print(
                 f"{F.LIGHTBLUE_EX}[info]{F.RESET} top level:\n\tbest possible solution: {F.LIGHTCYAN_EX}{n_kept}{F.RESET} ({F.LIGHTCYAN_EX}{n_kept / len(must_keep):.1%}{F.RESET})\n\tnot fixed: {F.LIGHTCYAN_EX}{unfixed}{F.RESET} ({F.LIGHTCYAN_EX}{unfixed / len(must_keep):.1%}{F.RESET})"
             )
-        best_sol = {init}
+        self.best_sol = {init}
         best_possible = n_kept
 
         solutions = defaultdict(int)
@@ -225,7 +226,7 @@ class BisectSolver(Solver):
                     initial_best = __new_sol__(
                         out,
                         initial_best,
-                        best_sol,
+                        self.best_sol,
                         improvement_queue,
                         pbar if use_tqdm else None,
                     )
@@ -246,7 +247,7 @@ class BisectSolver(Solver):
                 initial_best = __new_sol__(
                     out,
                     initial_best,
-                    best_sol,
+                    self.best_sol,
                     improvement_queue,
                     pbar if use_tqdm else None,
                 )
@@ -256,4 +257,13 @@ class BisectSolver(Solver):
                     break
         if use_tqdm:
             pbar.close()
-        return {Solution(instance, tuple(instance.get_tests(sol))) for sol in best_sol}
+        return self.__get_solutions__()
+
+    def __get_solutions__(self) -> Set[Solution]:
+        return {
+            Solution(self.instance, tuple(self.instance.get_tests(sol)))
+            for sol in self.best_sol
+        }
+
+    def early_exit(self) -> Set[Solution]:
+        return self.__get_solutions__()

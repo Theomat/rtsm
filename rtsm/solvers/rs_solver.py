@@ -70,10 +70,11 @@ class RandomSamplingSolver(Solver):
         """
         Try to solve an instance of RTSM and provides a set of solutions.
         """
+        self.instance = instance
         SAMPLING_UNIT = 100
         n = len(instance.tests)
         init = tuple(True for _ in range(n))
-        best_sol = {init}
+        self.best_sol = {init}
         best_cost = n
 
         budget = samples
@@ -112,7 +113,7 @@ class RandomSamplingSolver(Solver):
                     best_cost = __new_sol__(
                         out,
                         best_cost,
-                        best_sol,
+                        self.best_sol,
                         pbar if use_tqdm else None,
                     )
             pool.shutdown()
@@ -131,10 +132,19 @@ class RandomSamplingSolver(Solver):
                 best_cost = __new_sol__(
                     out,
                     best_cost,
-                    best_sol,
+                    self.best_sol,
                     pbar if use_tqdm else None,
                 )
         if use_tqdm:
             pbar.close()
 
-        return {Solution(instance, tuple(instance.get_tests(sol))) for sol in best_sol}
+        return self.__get_solutions__()
+
+    def __get_solutions__(self) -> Set[Solution]:
+        return {
+            Solution(self.instance, tuple(self.instance.get_tests(sol)))
+            for sol in self.best_sol
+        }
+
+    def early_exit(self) -> Set[Solution]:
+        return self.__get_solutions__()
