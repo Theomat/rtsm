@@ -2,14 +2,17 @@ if __name__ == "__main__":
     import argparse
     import sys
     import json
-    from typing import List
+    from typing import List, Dict, Callable
 
     from colorama import Fore as F
 
+    from rtsm.instance import Instance
     from rtsm.solution import Solution
     from rtsm.data_loaders.csv_data_loader import CSVDataLoader
 
+    from rtsm.predictors.predictor import Predictor
     from rtsm.predictors.logistic_boolean_predictor import LogisticBooleanPredictor
+    from rtsm.predictors.linear_predictor import LinearRegressionPredictor
 
     from rtsm.solvers.solver import Solver
     from rtsm.solvers.bisect_solver import BisectSolver
@@ -22,7 +25,10 @@ if __name__ == "__main__":
         supported_extensions.update(loader.get_extensions())
 
     # Predictors
-    predictors = {"logistic-bool": LogisticBooleanPredictor}
+    predictors: Dict[str, Callable[[Instance], Predictor]] = {
+        "logistic-bool": LogisticBooleanPredictor,
+        "linear": LinearRegressionPredictor,
+    }
 
     # Solvers
     __solver_list__: List[Solver] = [BisectSolver(), RandomSamplingSolver()]
