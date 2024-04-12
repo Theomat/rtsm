@@ -58,6 +58,14 @@ if __name__ == "__main__":
         "--samples", type=int, default=10000, help="number of samples, default: 10000"
     )
 
+    group = parser.add_argument_group("approximate (linear)")
+    group.add_argument(
+        "--accuracy",
+        type=float,
+        default=1.0,
+        help="accuracy of the ranking needed, default: 1.0",
+    )
+
     parser.add_argument("-q", "--quiet", action="store_true")
 
     parser.add_argument(
@@ -98,7 +106,8 @@ if __name__ == "__main__":
             )
 
     # Build predictor
-    predictor = predictors[args.predictor](instance)
+    accuracy: float = args.accuracy
+    predictor = predictors[args.predictor](instance, accuracy=accuracy)
     if verbose:
         print(f"prediction model: {F.CYAN}{predictor.get_name()}{F.RESET}")
 
