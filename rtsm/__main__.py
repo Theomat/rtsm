@@ -52,6 +52,7 @@ if __name__ == "__main__":
         default=list(solvers.keys())[0],
         help=f"solver to use, default: {list(solvers.keys())[0]}",
     )
+    group.add_argument("--swap", action="store_true", help="swap variants and tests")
 
     group = parser.add_argument_group("sampling algorithms (rs, bisect)")
     group.add_argument(
@@ -86,6 +87,7 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
 
     verbose: bool = not args.quiet
+    swap: bool = args.swap
     procs: int = args.procs
 
     samples: int = args.samples
@@ -96,6 +98,8 @@ if __name__ == "__main__":
         print(f"{F.RED}file format not supported:{F.RESET}", args.file, file=sys.stderr)
         sys.exit(1)
     instance = loaders.pop(0).load(args.file)
+    if swap:
+        instance = instance.swap()
     if verbose:
         print(
             f"loaded {F.CYAN}{len(instance.variants)}{F.RESET} variants and {F.CYAN}{len(instance.tests)}{F.RESET} tests"

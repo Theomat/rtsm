@@ -22,6 +22,15 @@ class Instance:
         self.performance_matrix = np.zeros((len(self.variants), len(self.tests)))
         self.__check = np.zeros_like(self.performance_matrix)
 
+    def swap(self) -> "Instance":
+        """
+        Return the same instance but with variants and tests swapped.
+        """
+        i = Instance(self.tests, self.variants)
+        i.performance_matrix = self.performance_matrix.transpose()
+        i.__check = self.__check.transpose() if self.__check is not None else None
+        return i
+
     def store_performance(
         self, variant: Union[str, int], test: Union[str, int], performance: float
     ):
