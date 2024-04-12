@@ -185,10 +185,11 @@ class BisectSolver(Solver):
 
         solutions = defaultdict(int)
         improvement_queue = []
+        if use_tqdm:
+            pbar = tqdm.tqdm(total=samples, smoothing=0)
         if nprocs > 1:
             pool = ProcessPoolExecutor(nprocs)
             futures = []
-            pbar = tqdm.tqdm(total=samples, smoothing=0)
             # Find best among possible children
             total_done = 0
             queued = 0
@@ -231,10 +232,8 @@ class BisectSolver(Solver):
                     if use_tqdm:
                         pbar.update(1)
             pool.shutdown()
-            if use_tqdm:
-                pbar.close()
         else:
-            for i in tqdm.trange(samples, smoothing=0) if use_tqdm else range(samples):
+            for i in range(samples):
                 if improvement_queue:
                     out = __improve_upon__(
                         improvement_queue.pop(),
@@ -249,8 +248,12 @@ class BisectSolver(Solver):
                     initial_best,
                     best_sol,
                     improvement_queue,
-                    None,
+                    pbar if use_tqdm else None,
                 )
+                if use_tqdm:
+                    pbar.update(1)
                 if initial_best <= best_possible:
                     break
+        if use_tqdm:
+            pbar.close()
         return {Solution(instance, tuple(instance.get_tests(sol))) for sol in best_sol}
