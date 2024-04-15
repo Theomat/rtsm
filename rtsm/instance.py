@@ -22,6 +22,22 @@ class Instance:
         self.performance_matrix = np.zeros((len(self.variants), len(self.tests)))
         self.__check = np.zeros_like(self.performance_matrix)
 
+    def warm_start(self) -> Tuple[bool, ...]:
+        """
+        Compute a warm start for this instance.
+        A warm start is an initial value which does not prevent optimality but remove useless data.
+        This works well with boolean data.
+        """
+        classes = set()
+        selected = [True for _ in range(len(self.tests))]
+        for i, row in enumerate(self.performance_matrix):
+            key = tuple(x for x in row)
+            if key in classes:
+                selected[i] = False
+            else:
+                classes.add(key)
+        return tuple(selected)
+
     def swap(self) -> "Instance":
         """
         Return the same instance but with variants and tests swapped.
