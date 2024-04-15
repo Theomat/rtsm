@@ -121,12 +121,20 @@ if __name__ == "__main__":
     if verbose:
         print(f"solver: {F.CYAN}{solver.get_name()}{F.RESET}")
 
+    def save(sols):
+        if verbose:
+            print(f"saved to {F.GREEN}{args.output}{F.RESET}")
+        with open(args.output, "w") as fd:
+            json.dump(Solution.to_json(sols), fd)
+
     # Anytime solving
     def save_result_pre_emptively():
         sols = solver.early_exit()
-        print(f"{F.YELLOW}warning:{F.RESET} early stopping, results were still saved!")
-        with open(args.output, "w") as fd:
-            json.dump(Solution.to_json(sols), fd)
+        if verbose:
+            print(
+                f"{F.YELLOW}warning:{F.RESET} early stopping, results were still saved!"
+            )
+        save(sols)
 
     atexit.register(save_result_pre_emptively)
 
@@ -134,6 +142,7 @@ if __name__ == "__main__":
     solutions = solver.solve(
         instance, predictor, verbose, procs, verbose=verbose, samples=samples
     )
+    atexit.unregister(save_result_pre_emptively)
     if verbose:
         if len(solutions) == 0:
             print(f"found {F.RED}no solution{F.RESET}")
@@ -143,7 +152,5 @@ if __name__ == "__main__":
             print(
                 f"the minimal cost solution found is {F.GREEN}{best_cost}{F.RESET} ({F.GREEN}{best_cost/ len(instance.tests):.1%}{F.RESET})"
             )
-
     # Save solution
-    with open(args.output, "w") as fd:
-        json.dump(Solution.to_json(solutions), fd)
+    save(solutions)
