@@ -172,6 +172,7 @@ class BisectSolver(Solver):
         n = len(instance.tests)
         initial_best = n
         init = tuple(True for _ in range(n))
+        self.best_sol = {init}
         must_keep = __find_necessary__(init, tuple(False for _ in range(n)), predictor)[
             0
         ]
@@ -181,7 +182,6 @@ class BisectSolver(Solver):
             print(
                 f"{F.LIGHTBLUE_EX}[info]{F.RESET} top level:\n\tbest possible solution: {F.LIGHTCYAN_EX}{n_kept}{F.RESET} ({F.LIGHTCYAN_EX}{n_kept / len(must_keep):.1%}{F.RESET})\n\tnot fixed: {F.LIGHTCYAN_EX}{unfixed}{F.RESET} ({F.LIGHTCYAN_EX}{unfixed / len(must_keep):.1%}{F.RESET})"
             )
-        self.best_sol = {init}
         best_possible = n_kept
 
         solutions = defaultdict(int)
