@@ -22,8 +22,7 @@ class LinearRegressionPredictor(Predictor):
         self.instance = instance
         self.Xt = instance.performance_matrix.copy()
         self.Yt = self.Xt.copy()
-        self.D: np.ndarray = np.sum(self.Xt, axis=-1)
-        self.Rt = to_ranking(self.D)
+        self.Rt = to_ranking(np.sum(self.Xt, axis=-1))
         self.accuracy = accuracy
 
     def get_name(self) -> str:
@@ -32,10 +31,9 @@ class LinearRegressionPredictor(Predictor):
     def can_predict(self, usable: Tuple[bool, ...]) -> bool:
         X = self.Xt[:, usable]
         Y = self.Yt[:, [not x for x in usable]]
-        D = self.D.copy()
+        D = np.sum(self.Xt, axis=-1)
         for i in range(Y.shape[1]):
-            new_row = __learn_linear_model__(X, Y[:, i].reshape((-1)))
-            D += new_row - Y[:, i]
-            if ranking_error(self.Rt, to_ranking(D)) > 1 - self.accuracy:
-                return False
+            D += __learn_linear_model__(X, Y[:, i].reshape((-1)))
+        if ranking_error(self.Rt, to_ranking(D)) > 1 - self.accuracy:
+            return False
         return True
