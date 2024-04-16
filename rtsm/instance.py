@@ -47,6 +47,19 @@ class Instance:
         i.__check = self.__check.transpose() if self.__check is not None else None
         return i
 
+    def subset(self, selected_tests: List[str]) -> "Instance":
+        """
+        Returns the instance where only the selected subset of tests are kept.
+        """
+        index2test = {self.tests.index(t): t for t in selected_tests}
+        instance = Instance(self.variants[:], list(index2test.values()))
+        for i, variant in enumerate(self.variants):
+            for index, test in index2test.items():
+                instance.store_performance(
+                    variant, test, self.performance_matrix[i, index]
+                )
+        return instance
+
     def split(self, n: int, seed: Optional[int] = None) -> List["Instance"]:
         """
         Split this instance into n instances, the variants are kepts but random subsets of tests are used.
