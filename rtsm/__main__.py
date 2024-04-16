@@ -167,7 +167,9 @@ if __name__ == "__main__":
             print(f"found {F.RED}no solution{F.RESET}")
         else:
             best_cost = min(sol.cost() for sol in solutions)
-            print(f"found {F.GREEN}{len(solutions)}{F.RESET} solutions")
+            print(
+                f"found {F.GREEN}{len(solutions)}{F.RESET} solution{'s' if len(solutions) > 1 else ''}"
+            )
             print(
                 f"the minimal cost solution found is {F.GREEN}{best_cost}{F.RESET} ({F.GREEN}{best_cost/ len(instance.tests):.1%}{F.RESET})"
             )
