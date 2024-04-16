@@ -98,7 +98,7 @@ class FusionSolver(Solver):
         self.instance = instance
         n = len(instance.tests)
         if use_tqdm:
-            pbar = tqdm.tqdm(total=len(instance.tests), smoothing=0, desc="fusion")
+            pbar = tqdm.tqdm(total=self.splits * 2 - 1, smoothing=0, desc="fusion")
         self.split_manager = SplitManager(instance, self.splits)
         if nprocs > 1:
             pool = ProcessPoolExecutor(nprocs)
