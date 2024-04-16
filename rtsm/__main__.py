@@ -20,6 +20,8 @@ if __name__ == "__main__":
     from rtsm.solvers.bisect_solver import BisectSolver
     from rtsm.solvers.rs_solver import RandomSamplingSolver
 
+    from rtsm.utils.argparse_helper import positive_int, bounded_float
+
     # Data Loaders
     data_loaders = [CSVDataLoader()]
     supported_extensions = set()
@@ -59,13 +61,16 @@ if __name__ == "__main__":
 
     group = parser.add_argument_group("sampling algorithms (rs, bisect)")
     group.add_argument(
-        "--samples", type=int, default=10000, help="number of samples, default: 10000"
+        "--samples",
+        type=positive_int,
+        default=10000,
+        help="number of samples, default: 10000",
     )
 
     group = parser.add_argument_group("approximate (linear, logistic-rank)")
     group.add_argument(
         "--accuracy",
-        type=float,
+        type=bounded_float(0, 1),
         default=1.0,
         help="accuracy of the ranking needed, default: 1.0",
     )
@@ -75,7 +80,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-p",
         "--procs",
-        type=int,
+        type=positive_int,
         default=1,
         help="number of processors to use, default: 1",
     )
