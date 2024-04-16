@@ -19,6 +19,7 @@ if __name__ == "__main__":
     from rtsm.solvers.solver import Solver
     from rtsm.solvers.bisect_solver import BisectSolver
     from rtsm.solvers.rs_solver import RandomSamplingSolver
+    from rtsm.solvers.fusion_solver import FusionSolver
 
     from rtsm.utils.argparse_helper import positive_int, bounded_float
 
@@ -58,6 +59,12 @@ if __name__ == "__main__":
         help=f"solver to use, default: {list(solvers.keys())[0]}",
     )
     group.add_argument("--swap", action="store_true", help="swap variants and tests")
+    group.add_argument(
+        "--splits",
+        type=positive_int,
+        default=1,
+        help="use divide and conquer to find solutions, while it loses optimality this scales well when dealing with large test sets, default: 1 (no splitting)",
+    )
 
     group = parser.add_argument_group("sampling algorithms (rs, bisect)")
     group.add_argument(
@@ -72,7 +79,7 @@ if __name__ == "__main__":
         "--accuracy",
         type=bounded_float(0, 1),
         default=1.0,
-        help="accuracy of the ranking needed, default: 1.0",
+        help="accuracy of the ranking needed, default: 1.0.",
     )
 
     parser.add_argument("-q", "--quiet", action="store_true")
@@ -97,6 +104,7 @@ if __name__ == "__main__":
     verbose: bool = not args.quiet
     swap: bool = args.swap
     procs: int = args.procs
+    splits: int = args.splits
 
     samples: int = args.samples
 
@@ -127,6 +135,8 @@ if __name__ == "__main__":
 
     # Get solver
     solver = solvers[args.solver]
+    if splits > 1:
+        solver = FusionSolver(solver.__class__, splits)
     if verbose:
         print(f"solver: {F.CYAN}{solver.get_name()}{F.RESET}")
 
