@@ -47,6 +47,33 @@ class Instance:
         i.__check = self.__check.transpose() if self.__check is not None else None
         return i
 
+    def split(self, n: int, seed: Optional[int] = None) -> List["Instance"]:
+        """
+        Split this instance into n instances, the variants are kepts but random subsets of tests are used.
+        """
+        rng = np.random.default_rng(seed)
+        test_i = list(enumerate(self.tests))
+        rng.shuffle(test_i)
+        parts = n
+        size = len(self.tests) // n
+        out = []
+        start = 0
+        while parts > 0:
+            end = start + size
+            if parts == 1:
+                end = len(self.tests)
+            index2test = {i: t for i, t in test_i[start:end]}
+            instance = Instance(self.variants[:], list(index2test.values()))
+            for i, variant in enumerate(self.variants):
+                for index, test in index2test.items():
+                    instance.store_performance(
+                        variant, test, self.performance_matrix[i, index]
+                    )
+            out.append(instance)
+            start = end
+            parts -= 1
+        return out
+
     def store_performance(
         self, variant: Union[str, int], test: Union[str, int], performance: float
     ):
