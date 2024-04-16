@@ -158,7 +158,7 @@ class BisectSolver(Solver):
     def solve(
         self,
         instance: Instance,
-        predictor_builder: Callable[[Instance], Predictor],
+        predictor_builder: Union[Callable[[Instance], Predictor], Predictor],
         use_tqdm: bool = False,
         nprocs: int = 1,
         verbose: bool = False,
@@ -168,7 +168,11 @@ class BisectSolver(Solver):
         """
         Try to solve an instance of RTSM and provides a set of solutions.
         """
-        predictor = predictor_builder(instance)
+        predictor = (
+            predictor_builder(instance)
+            if not isinstance(predictor_builder, Predictor)
+            else predictor_builder
+        )
         self.instance = instance
         n = len(instance.tests)
         initial_best = n
