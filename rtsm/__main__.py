@@ -119,9 +119,11 @@ if __name__ == "__main__":
 
     # Build predictor
     accuracy: float = args.accuracy
-    predictor = predictors[args.predictor](instance, accuracy=accuracy)
+    predictor_builder = lambda instance: predictors[args.predictor](
+        instance, accuracy=accuracy
+    )
     if verbose:
-        print(f"prediction model: {F.CYAN}{predictor.get_name()}{F.RESET}")
+        print(f"prediction model: {F.CYAN}{args.predictor}{F.RESET}")
 
     # Get solver
     solver = solvers[args.solver]
@@ -147,7 +149,7 @@ if __name__ == "__main__":
 
     # Solve
     solutions = solver.solve(
-        instance, predictor, verbose, procs, verbose=verbose, samples=samples
+        instance, predictor_builder, verbose, procs, verbose=verbose, samples=samples
     )
     atexit.unregister(save_result_pre_emptively)
     if verbose:

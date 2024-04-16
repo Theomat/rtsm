@@ -1,6 +1,6 @@
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, wait
-from typing import Optional, Set, Tuple, Union
+from typing import Callable, Optional, Set, Tuple, Union
 
 import numpy as np
 import tqdm
@@ -61,7 +61,7 @@ class RandomSamplingSolver(Solver):
     def solve(
         self,
         instance: Instance,
-        predictor: Predictor,
+        predictor_builder: Callable[[Instance], Predictor],
         use_tqdm: bool = False,
         nprocs: int = 1,
         samples: int = 10000,
@@ -70,6 +70,7 @@ class RandomSamplingSolver(Solver):
         """
         Try to solve an instance of RTSM and provides a set of solutions.
         """
+        predictor = predictor_builder(instance)
         self.instance = instance
         SAMPLING_UNIT = 100
         n = len(instance.tests)
