@@ -1,6 +1,7 @@
 if __name__ == "__main__":
     import argparse
     import sys
+    import os
     import json
     from typing import List, Dict, Callable
     import atexit
@@ -65,6 +66,12 @@ if __name__ == "__main__":
         default=1,
         help="use divide and conquer to find solutions, while it loses optimality this scales well when dealing with large test sets, default: 1 (no splitting)",
     )
+    group.add_argument(
+        "--start",
+        type=str,
+        default="",
+        help="start from an existing solution file in order to improve upon it",
+    )
 
     group = parser.add_argument_group("sampling algorithms (rs, bisect)")
     group.add_argument(
@@ -107,6 +114,7 @@ if __name__ == "__main__":
     splits: int = args.splits
 
     samples: int = args.samples
+    initial_solution: str = args.start
 
     # Check then load data
     loaders = [d for d in data_loaders if d.match(args.file)]
@@ -114,8 +122,34 @@ if __name__ == "__main__":
         print(f"{F.RED}file format not supported:{F.RESET}", args.file, file=sys.stderr)
         sys.exit(1)
     instance = loaders.pop(0).load(args.file)
+    # Swap instance
     if swap:
         instance = instance.swap()
+    # Warm start with previous solution
+    if len(initial_solution) > 0:
+        if not os.path.exists(initial_solution) or not os.path.isfile(initial_solution):
+            print(
+                f"{F.RED}start solution file does not exist or is not a valid file:{F.RESET}",
+                initial_solution,
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        with open(initial_solution) as fd:
+            solution_list = json.load(fd)[0]
+            if len(solution_list) == 0:
+                print(
+                    f"{F.RED}start solution file contains no solution!{F.RESET}",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            one_sol = solution_list[0]
+            before = len(instance.tests)
+            instance = instance.subset(solution_list)
+            if verbose:
+                print(
+                    f"used start solution to go from {F.CYAN}{before}{F.RESET} tests to {F.CYAN}{len(instance.tests)}{F.RESET} ({F.CYAN}{len(instance.tests)/ before:.1%}{F.RESET}) tests"
+                )
+
     if verbose:
         print(
             f"loaded {F.CYAN}{len(instance.variants)}{F.RESET} variants and {F.CYAN}{len(instance.tests)}{F.RESET} tests"
