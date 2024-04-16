@@ -1,3 +1,4 @@
 from rtsm.predictors.predictor import Predictor
 from rtsm.predictors.logistic_boolean_predictor import LogisticBooleanPredictor
+from rtsm.predictors.logistic_rank_predictor import LogisticRankPredictor
 from rtsm.predictors.linear_predictor import LinearRegressionPredictor

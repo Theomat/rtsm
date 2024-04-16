@@ -13,6 +13,7 @@ if __name__ == "__main__":
 
     from rtsm.predictors.predictor import Predictor
     from rtsm.predictors.logistic_boolean_predictor import LogisticBooleanPredictor
+    from rtsm.predictors.logistic_rank_predictor import LogisticRankPredictor
     from rtsm.predictors.linear_predictor import LinearRegressionPredictor
 
     from rtsm.solvers.solver import Solver
@@ -28,6 +29,7 @@ if __name__ == "__main__":
     # Predictors
     predictors: Dict[str, Callable[[Instance], Predictor]] = {
         "logistic-bool": LogisticBooleanPredictor,
+        "logistic-rank": LogisticRankPredictor,
         "linear": LinearRegressionPredictor,
     }
 
@@ -60,7 +62,7 @@ if __name__ == "__main__":
         "--samples", type=int, default=10000, help="number of samples, default: 10000"
     )
 
-    group = parser.add_argument_group("approximate (linear)")
+    group = parser.add_argument_group("approximate (linear, logistic-rank)")
     group.add_argument(
         "--accuracy",
         type=float,
