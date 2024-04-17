@@ -115,7 +115,7 @@ if __name__ == "__main__":
         help="destination json file containing the solutions",
     )
 
-    args = parser.parse_args(sys.argv[1:])
+    args = parser.parse_args()
 
     verbose: bool = not args.quiet
     swap: bool = args.swap
