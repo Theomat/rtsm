@@ -65,7 +65,7 @@ class Instance:
         Split this instance into n instances, the variants are kepts but random subsets of tests are used.
         """
         rng = np.random.default_rng(seed)
-        test_i = list(enumerate(self.tests))
+        test_i = self.tests[:]
         rng.shuffle(test_i)
         parts = n
         size = len(self.tests) // n
@@ -75,14 +75,7 @@ class Instance:
             end = start + size
             if parts == 1:
                 end = len(self.tests)
-            index2test = {i: t for i, t in test_i[start:end]}
-            instance = Instance(self.variants[:], list(index2test.values()))
-            for i, variant in enumerate(self.variants):
-                for index, test in index2test.items():
-                    instance.store_performance(
-                        variant, test, self.performance_matrix[i, index]
-                    )
-            out.append(instance)
+            out.append(self.subset(test_i[start:end]))
             start = end
             parts -= 1
         return out
