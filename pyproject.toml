@@ -10,7 +10,7 @@ repository = "https://github.com/Theomat/rtsm"
 [tool.poetry.dependencies]
 python = ">=3.8"
 numpy = ">=1.22"
-scikit-lean = ">=1.0"
+scikit-learn = ">=1.0"
 colorama = ">=0.4.4"
 tqdm = ">=4.63.0"
 
