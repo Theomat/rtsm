@@ -7,6 +7,7 @@ if __name__ == "__main__":
     import atexit
 
     from colorama import Fore as F
+    import numpy as np
 
     from rtsm.instance import Instance
     from rtsm.solution import Solution
@@ -31,7 +32,13 @@ if __name__ == "__main__":
         supported_extensions.update(loader.get_extensions())
 
     # Predictors
+    def adaptative_predictor(inst: Instance, **kwargs) -> Predictor:
+        if np.unique(inst.performance_matrix).shape[0] == 2:
+            return LogisticBooleanPredictor(inst, **kwargs)
+        return LinearRegressionPredictor(instance, **kwargs)
+
     predictors: Dict[str, Callable[[Instance], Predictor]] = {
+        "auto": adaptative_predictor,
         "logistic-bool": LogisticBooleanPredictor,
         "logistic-rank": LogisticRankPredictor,
         "linear": LinearRegressionPredictor,
@@ -161,11 +168,13 @@ if __name__ == "__main__":
 
     # Build predictor
     accuracy: float = args.accuracy
-    predictor_builder = lambda instance: predictors[args.predictor](
-        instance, accuracy=accuracy
-    )
+    predictor_builder: Callable[[Instance], Predictor] = lambda instance: predictors[
+        args.predictor
+    ](instance, accuracy=accuracy)
     if verbose:
-        print(f"prediction model: {F.CYAN}{args.predictor}{F.RESET}")
+        print(
+            f"prediction model: {F.CYAN}{predictor_builder(instance).get_name()}{F.RESET}"
+        )
 
     # Get solver
     solver = solvers[args.solver]
