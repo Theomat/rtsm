@@ -86,11 +86,15 @@ def __bisect__(
         # If one split is SAT, then great change current to it and update must_keep
         if predictor.can_predict(a):
             current = a
+            if min_score <= 1 and sum(a) == 1:
+                return a
             must_keep, has_finished = __find_necessary__(current, must_keep, predictor)
             if has_finished:
                 return must_keep
         elif predictor.can_predict(b):
             current = b
+            if min_score <= 1 and sum(b) == 1:
+                return b
             must_keep, has_finished = __find_necessary__(current, must_keep, predictor)
             if has_finished:
                 return must_keep
