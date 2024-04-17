@@ -189,7 +189,6 @@ class BisectSolver(Solver):
             )
         best_possible = max(n_kept, 1)
 
-        solutions = defaultdict(int)
         improvement_queue = []
         if use_tqdm:
             pbar = tqdm.tqdm(total=samples, smoothing=0)
@@ -226,7 +225,6 @@ class BisectSolver(Solver):
                 for future in done:
                     total_done += 1
                     out = future.result()
-                    solutions[sum(out)] += 1
                     futures.remove(future)
                     initial_best = __new_sol__(
                         out,
@@ -248,7 +246,6 @@ class BisectSolver(Solver):
                     )
                 else:
                     out = __bisect__(tuple(init), must_keep, initial_best, i, predictor)
-                solutions[sum(out)] += 1
                 initial_best = __new_sol__(
                     out,
                     initial_best,

@@ -84,7 +84,6 @@ class RandomSamplingSolver(Solver):
 
         budget = samples
 
-        solutions = defaultdict(int)
         if use_tqdm:
             pbar = tqdm.tqdm(total=samples, smoothing=0)
         if nprocs > 1:
@@ -114,7 +113,6 @@ class RandomSamplingSolver(Solver):
                         pbar.update(used)
                     if not has_found:
                         continue
-                    solutions[sum(out)] += 1
                     best_cost = __new_sol__(
                         out,
                         best_cost,
@@ -133,7 +131,6 @@ class RandomSamplingSolver(Solver):
                     pbar.update(used)
                 if not has_found:
                     continue
-                solutions[sum(out)] += 1
                 best_cost = __new_sol__(
                     out,
                     best_cost,
