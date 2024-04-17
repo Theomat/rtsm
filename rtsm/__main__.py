@@ -48,7 +48,10 @@ if __name__ == "__main__":
     __solver_list__: List[Solver] = [BisectSolver(), RandomSamplingSolver()]
     solvers = {solver.get_name(): solver for solver in __solver_list__}
 
-    parser = argparse.ArgumentParser(description="Ranked test suite minimisation")
+    parser = argparse.ArgumentParser(
+        description="Ranked test suite minimisation",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument(
         "file",
         help=f"file containing the data, supported extensions are: {', '.join(supported_extensions)}",
@@ -58,25 +61,24 @@ if __name__ == "__main__":
         "--predictor",
         choices=list(predictors.keys()),
         default=list(predictors.keys())[0],
-        help=f"prediction model to use, default: {list(predictors.keys())[0]}",
+        help=f"prediction model to use",
     )
     group.add_argument(
         "--solver",
         choices=list(solvers.keys()),
         default=list(solvers.keys())[0],
-        help=f"solver to use, default: {list(solvers.keys())[0]}",
+        help=f"solver to use",
     )
     group.add_argument("--swap", action="store_true", help="swap variants and tests")
     group.add_argument(
         "--splits",
         type=positive_int,
         default=1,
-        help="use divide and conquer to find solutions, while it loses optimality this scales well when dealing with large test sets, default: 1 (no splitting)",
+        help="use divide and conquer to find solutions, while it loses optimality this scales well when dealing with large test sets",
     )
     group.add_argument(
         "--start",
         type=str,
-        default="",
         help="start from an existing solution file in order to improve upon it",
     )
 
@@ -85,7 +87,7 @@ if __name__ == "__main__":
         "--samples",
         type=positive_int,
         default=10000,
-        help="number of samples, default: 10000",
+        help="number of samples",
     )
 
     group = parser.add_argument_group("approximate (linear, logistic-rank)")
@@ -93,7 +95,7 @@ if __name__ == "__main__":
         "--accuracy",
         type=bounded_float(0, 1),
         default=1.0,
-        help="accuracy of the ranking needed, default: 1.0.",
+        help="accuracy of the ranking needed",
     )
 
     parser.add_argument("-q", "--quiet", action="store_true")
@@ -103,14 +105,14 @@ if __name__ == "__main__":
         "--procs",
         type=positive_int,
         default=1,
-        help="number of processors to use, default: 1",
+        help="number of processors to use",
     )
     parser.add_argument(
         "-o",
         "--output",
         type=str,
         default="./rtsm_solutions.json",
-        help="destination json file containing the solutions, default: ./rtsm_solutions.json",
+        help="destination json file containing the solutions",
     )
 
     args = parser.parse_args(sys.argv[1:])
@@ -121,7 +123,7 @@ if __name__ == "__main__":
     splits: int = args.splits
 
     samples: int = args.samples
-    initial_solution: str = args.start
+    initial_solution: str = args.start or ""
 
     # Check then load data
     loaders = [d for d in data_loaders if d.match(args.file)]
