@@ -35,7 +35,7 @@ if __name__ == "__main__":
     def adaptative_predictor(inst: Instance, **kwargs) -> Predictor:
         if np.unique(inst.performance_matrix).shape[0] == 2:
             return LogisticBooleanPredictor(inst, **kwargs)
-        return LinearRegressionPredictor(instance, **kwargs)
+        return LinearRegressionPredictor(inst, **kwargs)
 
     predictors: Dict[str, Callable[[Instance], Predictor]] = {
         "auto": adaptative_predictor,

@@ -1,5 +1,3 @@
-
-
 if __name__ == "__main__":
     from typing import Callable, Dict
     import argparse
@@ -28,7 +26,7 @@ if __name__ == "__main__":
     def adaptative_predictor(inst: Instance, **kwargs) -> Predictor:
         if np.unique(inst.performance_matrix).shape[0] == 2:
             return LogisticBooleanPredictor(inst, **kwargs)
-        return LinearRegressionPredictor(instance, **kwargs)
+        return LinearRegressionPredictor(inst, **kwargs)
 
     predictors: Dict[str, Callable[[Instance], Predictor]] = {
         "auto": adaptative_predictor,
@@ -108,7 +106,6 @@ if __name__ == "__main__":
     # Build predictor
     predictor: Predictor = predictors[args.predictor](instance)
     print(f"prediction model: {F.CYAN}{predictor.get_name()}{F.RESET}")
-
 
     R = to_ranking(np.sum(instance.performance_matrix, axis=1))
     sR = to_ranking(np.sum(instance.subset(one_sol).performance_matrix, axis=1))
