@@ -187,7 +187,7 @@ class BisectSolver(Solver):
             print(
                 f"{F.LIGHTBLUE_EX}[info]{F.RESET} top level:\n\tbest possible solution: {F.LIGHTCYAN_EX}{n_kept}{F.RESET} ({F.LIGHTCYAN_EX}{n_kept / len(must_keep):.1%}{F.RESET})\n\tnot fixed: {F.LIGHTCYAN_EX}{unfixed}{F.RESET} ({F.LIGHTCYAN_EX}{unfixed / len(must_keep):.1%}{F.RESET})"
             )
-        best_possible = n_kept
+        best_possible = max(n_kept, 1)
 
         solutions = defaultdict(int)
         improvement_queue = []

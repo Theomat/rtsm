@@ -92,7 +92,7 @@ class RandomSamplingSolver(Solver):
             futures = []
             # Find best among possible children
             queued = 0
-            while budget > 0:
+            while budget > 0 and best_cost > 1:
                 while len(futures) < nprocs:
                     futures.append(
                         pool.submit(
@@ -124,7 +124,7 @@ class RandomSamplingSolver(Solver):
             pool.shutdown()
 
         else:
-            while budget > 0:
+            while budget > 0 and best_cost > 1:
                 has_found, used, out = __sample__(
                     best_cost - 1, n, predictor, budget, min(SAMPLING_UNIT, budget)
                 )
