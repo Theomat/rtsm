@@ -37,9 +37,15 @@ class Predictor(ABC):
         """
         pass
 
-    @abstractmethod
     def can_predict(self, usable: Tuple[bool, ...]) -> bool:
         """
         Return true if and only if the performances are predictable according to this predictor.
+        """
+        return self.ranking_error(usable) <= 0
+
+    @abstractmethod
+    def ranking_error(self, usable: Tuple[bool, ...]) -> float:
+        """
+        Compute the ranking error after we learn a predicotr given the usable information.
         """
         pass

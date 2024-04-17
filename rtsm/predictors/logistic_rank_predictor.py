@@ -62,3 +62,17 @@ class LogisticRankPredictor(Predictor):
         if ranking_error(self.Rt, new_R) > 1 - self.accuracy:
             return False
         return True
+
+    def ranking_error(self, usable: Tuple[bool, ...]) -> bool:
+        mask = usable + usable
+        X = self.Xt[:, mask]
+        new_R = np.zeros_like(self.Rt)
+        total_error = 0
+        m = self.instance.performance_matrix.shape[0]
+        for i in range(m):
+            pred, error = __learn_boolean_linear_model__(
+                X[i * m : (i + 1) * m, :], self.Rt[i, :]
+            )
+            new_R[i, :] = pred
+            total_error += error
+        return ranking_error(self.Rt, new_R)

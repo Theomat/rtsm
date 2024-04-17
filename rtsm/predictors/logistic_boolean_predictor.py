@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from rtsm.instance import Instance
-from rtsm.predictors.predictor import Predictor
+from rtsm.predictors.predictor import Predictor, ranking_error, to_ranking
 
 import numpy as np
 from sklearn.linear_model import LogisticRegression
@@ -16,8 +16,9 @@ def __learn_boolean_linear_model__(
         return 0, 0
     model = LogisticRegression(solver="liblinear", penalty="l1")
     model.fit(A, y)
-    error = np.mean(model.predict(A) != y)
-    return model.coef_, error
+    pred = model.predict(A)
+    error = np.mean(pred != y)
+    return pred, error
 
 
 class LogisticBooleanPredictor(Predictor):
@@ -42,3 +43,17 @@ class LogisticBooleanPredictor(Predictor):
             if error > 0:
                 return False
         return True
+
+    def ranking_error(self, usable: Tuple[bool, ...]) -> bool:
+        X = self.Xt[:, usable]
+        mask = [not x for x in usable]
+        Y = self.Yt[:, mask]
+        cp = self.Xt.copy()
+
+        for i in range(Y.shape[1]):
+            pred, error = __learn_boolean_linear_model__(X, Y[:, i].reshape((-1)))
+            cp[:, mask] = pred
+        return ranking_error(
+            to_ranking(np.sum(self.instance.performance_matrix, axis=-1)),
+            to_ranking(np.sum(cp, axis=-1)),
+        )

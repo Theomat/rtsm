@@ -29,11 +29,12 @@ class LinearRegressionPredictor(Predictor):
         return "linear"
 
     def can_predict(self, usable: Tuple[bool, ...]) -> bool:
+        return self.ranking_error(usable) <= 1 - self.accuracy
+
+    def ranking_error(self, usable: Tuple[bool, ...]) -> bool:
         X = self.Xt[:, usable]
         Y = self.Yt[:, [not x for x in usable]]
         D = np.sum(self.Xt, axis=-1)
         for i in range(Y.shape[1]):
             D += __learn_linear_model__(X, Y[:, i].reshape((-1)))
-        if ranking_error(self.Rt, to_ranking(D)) > 1 - self.accuracy:
-            return False
-        return True
+        return ranking_error(self.Rt, to_ranking(D))
