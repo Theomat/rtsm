@@ -136,7 +136,7 @@ class FusionSolver(Solver):
                 out = sub_solver.solve(
                     sub_instance,
                     predictor_builder,
-                    use_tqdm,
+                    False,
                     verbose=sub_verbose,
                     **kwargs,
                 )
