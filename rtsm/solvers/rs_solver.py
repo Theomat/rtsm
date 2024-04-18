@@ -91,7 +91,7 @@ class RandomSamplingSolver(Solver):
             pool = ProcessPoolExecutor(nprocs)
             futures = []
             # Find best among possible children
-            queued = seed
+            queued = seed or 0
             while budget > 0 and best_cost > 1:
                 while len(futures) < nprocs:
                     futures.append(
@@ -128,7 +128,7 @@ class RandomSamplingSolver(Solver):
                     best_cost - 1,
                     n,
                     predictor,
-                    seed + budget,
+                    (seed or 0) + budget,
                     min(SAMPLING_UNIT, budget),
                 )
                 budget -= used

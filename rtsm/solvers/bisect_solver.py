@@ -205,7 +205,7 @@ class BisectSolver(Solver):
             futures = []
             # Find best among possible children
             total_done = 0
-            queued = seed
+            queued = seed or 0
             while total_done < samples and initial_best > best_possible:
                 while len(futures) < nprocs and queued < samples:
                     if improvement_queue:
@@ -249,12 +249,12 @@ class BisectSolver(Solver):
                 if improvement_queue:
                     out = __improve_upon__(
                         improvement_queue.pop(),
-                        i + seed,
+                        i + (seed or 0),
                         predictor,
                     )
                 else:
                     out = __bisect__(
-                        tuple(init), must_keep, initial_best, i + seed, predictor
+                        tuple(init), must_keep, initial_best, i + (seed or 0), predictor
                     )
                 initial_best = __new_sol__(
                     out,
