@@ -24,7 +24,7 @@ class CSVDataLoader(DataLoader):
         for row in rows:
             tests.add(row[indices[1]])
             variants.add(row[indices[0]])
-        instance = Instance(list(variants), list(tests))
+        instance = Instance(sorted(variants), sorted(tests))
         for row in rows:
             instance.store_performance(
                 row[indices[0]], row[indices[1]], float(row[indices[2]])

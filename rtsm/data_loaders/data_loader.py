@@ -22,5 +22,6 @@ class DataLoader(ABC):
     def load(self, path: str) -> Instance:
         """
         Loads the specified file into a RTSM Instance.
+        An important requirement is that they are non stochastic, that is the order of the tests and variants in the Instance is deterministic.
         """
         pass
