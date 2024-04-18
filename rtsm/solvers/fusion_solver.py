@@ -1,5 +1,5 @@
 from concurrent.futures import ProcessPoolExecutor, wait
-from typing import Any, Callable, Set, Tuple
+from typing import Any, Callable, Optional, Set, Tuple
 
 import tqdm
 from colorama import Fore as F
@@ -22,9 +22,9 @@ def __solve__(
 
 
 class SplitManager:
-    def __init__(self, instance: Instance, splits: int) -> None:
+    def __init__(self, instance: Instance, splits: int, seed: Optional[int]) -> None:
         self.instance = instance
-        instances = instance.split(splits, seed=1)
+        instances = instance.split(splits, seed=seed)
         self.solutions = {
             i: v.get_tests(v.warm_start()) for i, v in enumerate(instances)
         }
@@ -93,15 +93,16 @@ class FusionSolver(Solver):
         predictor_builder: Callable[[Instance], Predictor],
         use_tqdm: bool = False,
         nprocs: int = 1,
-        verbose: bool = False,
-        sub_verbose: bool = False,
+        seed: Optional[int] = None,
         **kwargs: Any,
     ) -> Set[Solution]:
         self.instance = instance
         n = len(instance.tests)
         if use_tqdm:
             pbar = tqdm.tqdm(total=self.splits * 2 - 1, smoothing=0, desc="fusion")
-        self.split_manager = SplitManager(instance, self.splits)
+        self.split_manager = SplitManager(instance, self.splits, seed)
+        kwargs["seed"] = seed
+        kwargs["use_tqdm"] = False
         if nprocs > 1:
             pool = ProcessPoolExecutor(nprocs)
             futures = []
@@ -115,8 +116,6 @@ class FusionSolver(Solver):
                             self.solver_builder(),
                             sub_instance,
                             predictor_builder(sub_instance),
-                            False,
-                            verbose=sub_verbose,
                             **kwargs,
                         )
                     )
@@ -138,8 +137,6 @@ class FusionSolver(Solver):
                 out = sub_solver.solve(
                     sub_instance,
                     predictor_builder,
-                    False,
-                    verbose=sub_verbose,
                     **kwargs,
                 )
                 self.split_manager.feed((id, out))

@@ -65,6 +65,7 @@ class RandomSamplingSolver(Solver):
         use_tqdm: bool = False,
         nprocs: int = 1,
         samples: int = 10000,
+        seed: Optional[int] = None,
         **kwargs,
     ) -> Set[Solution]:
         """
@@ -90,7 +91,7 @@ class RandomSamplingSolver(Solver):
             pool = ProcessPoolExecutor(nprocs)
             futures = []
             # Find best among possible children
-            queued = 0
+            queued = seed
             while budget > 0 and best_cost > 1:
                 while len(futures) < nprocs:
                     futures.append(
@@ -124,7 +125,11 @@ class RandomSamplingSolver(Solver):
         else:
             while budget > 0 and best_cost > 1:
                 has_found, used, out = __sample__(
-                    best_cost - 1, n, predictor, budget, min(SAMPLING_UNIT, budget)
+                    best_cost - 1,
+                    n,
+                    predictor,
+                    seed + budget,
+                    min(SAMPLING_UNIT, budget),
                 )
                 budget -= used
                 if use_tqdm:
