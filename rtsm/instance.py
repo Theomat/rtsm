@@ -25,6 +25,16 @@ class Instance:
         self.performance_matrix = np.zeros((len(self.variants), len(self.tests)))
         self.__check = np.zeros_like(self.performance_matrix)
 
+    def copy(self) -> "Instance":
+        """
+        Makes a shallow copy of this instance.
+        """
+        i = Instance(self.variants, self.tests)
+        i.performance_matrix = self.performance_matrix
+        i.__check = self.__check
+        i.__warm_start = self.__warm_start
+        return i
+
     def warm_start(self) -> Tuple[bool, ...]:
         """
         Gives an initial start to solve this instance.
