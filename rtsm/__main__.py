@@ -82,12 +82,18 @@ if __name__ == "__main__":
         help="start from an existing solution file in order to improve upon it",
     )
 
-    group = parser.add_argument_group("sampling algorithms (rs, bisect)")
+    group = parser.add_argument_group("sampling based solvers (rs, bisect)")
     group.add_argument(
         "--samples",
         type=positive_int,
         default=10000,
         help="number of samples",
+    )
+    group.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="seed used for probabilistic solvers",
     )
 
     group = parser.add_argument_group("approximate (linear, logistic-rank)")
@@ -204,7 +210,13 @@ if __name__ == "__main__":
 
     # Solve
     solutions = solver.solve(
-        instance, predictor_builder, verbose, procs, verbose=verbose, samples=samples
+        instance,
+        predictor_builder,
+        verbose,
+        procs,
+        verbose=verbose,
+        samples=samples,
+        seed=args.seed,
     )
     atexit.unregister(save_result_pre_emptively)
     if verbose:
