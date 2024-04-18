@@ -25,7 +25,9 @@ class SplitManager:
     def __init__(self, instance: Instance, splits: int) -> None:
         self.instance = instance
         instances = instance.split(splits, seed=1)
-        self.solutions = {i: v.tests for i, v in enumerate(instances)}
+        self.solutions = {
+            i: v.get_tests(v.warm_start()) for i, v in enumerate(instances)
+        }
         self.queue = [(k, v) for k, v in enumerate(instances)]
         self.dependencies = {}
         self.merge_queue = []
