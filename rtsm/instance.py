@@ -17,6 +17,9 @@ class Instance:
     __check: Optional[np.ndarray] = field(
         default=None, compare=False, repr=False, hash=False
     )
+    __warm_start: Optional[Tuple[bool, ...]] = field(
+        default=None, compare=False, repr=False, hash=False
+    )
 
     def __post_init__(self):
         self.performance_matrix = np.zeros((len(self.variants), len(self.tests)))
@@ -24,19 +27,12 @@ class Instance:
 
     def warm_start(self) -> Tuple[bool, ...]:
         """
-        Compute a warm start for this instance.
-        A warm start is an initial value which does not prevent optimality but remove useless data.
-        This works well with boolean data.
+        Gives an initial start to solve this instance.
+        It is guaranteed that the warm start satisfies the solving constraints.
         """
-        classes = set()
-        selected = [True for _ in range(len(self.tests))]
-        for i, row in enumerate(self.performance_matrix):
-            key = tuple(x for x in row)
-            if key in classes:
-                selected[i] = False
-            else:
-                classes.add(key)
-        return tuple(selected)
+        if self.__warm_start is None:
+            self.__warm_start = tuple(True for _ in range(len(self.tests)))
+        return self.__warm_start
 
     def swap(self) -> "Instance":
         """
