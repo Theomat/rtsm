@@ -78,9 +78,9 @@ class RandomSamplingSolver(Solver):
         self.instance = instance
         SAMPLING_UNIT = 100
         n = len(instance.tests)
-        init = tuple(True for _ in range(n))
+        init = instance.warm_start()
         self.best_sol = {init}
-        best_cost = n
+        best_cost = sum(init)
 
         budget = samples
 

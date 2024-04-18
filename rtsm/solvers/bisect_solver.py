@@ -179,8 +179,8 @@ class BisectSolver(Solver):
         )
         self.instance = instance
         n = len(instance.tests)
-        initial_best = n
-        init = tuple(True for _ in range(n))
+        init = instance.warm_start()
+        initial_best = sum(init)
         self.best_sol = {init}
         must_keep = __find_necessary__(init, tuple(False for _ in range(n)), predictor)[
             0
