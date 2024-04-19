@@ -103,6 +103,7 @@ class FusionSolver(Solver):
         self.split_manager = SplitManager(instance, self.splits, seed)
         kwargs["seed"] = seed
         kwargs["use_tqdm"] = False
+        kwargs["verbose"] = False
         if nprocs > 1:
             pool = ProcessPoolExecutor(nprocs)
             futures = []
