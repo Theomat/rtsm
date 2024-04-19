@@ -42,7 +42,7 @@ class SplitManager:
         self.queue = [(k, v) for k, v in enumerate(instances)]
         self.tries = {i: 0 for i in range(len(instances))}
         self.max_tries = max_tries
-        self.dependencies = {}
+        self.dependencies = {i: [i] for i in range(len(instances))}
         self.merge_queue = []
         self.id_generator = len(self.solutions)
 
