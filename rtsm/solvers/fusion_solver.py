@@ -165,10 +165,12 @@ class FusionSolver(Solver):
         if verbose:
             best_score = self.split_manager.current_best_score()
             print(
-                f"{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_score}{F.RESET} ({F.LIGHTCYAN_EX}{best_score/ len(instance.tests):.1%}{F.RESET})"
+                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_score}{F.RESET} ({F.LIGHTCYAN_EX}{best_score/ len(instance.tests):.1%}{F.RESET})"
             )
         if use_tqdm:
-            pbar = tqdm.tqdm(total=self.splits * 2 - 1, smoothing=0, desc="fusion")
+            pbar = tqdm.tqdm(
+                total=self.splits * 2 - 1, smoothing=0, desc=self._get_print_prefix_()
+            )
         kwargs["seed"] = seed
         kwargs["use_tqdm"] = False
         kwargs["verbose"] = False

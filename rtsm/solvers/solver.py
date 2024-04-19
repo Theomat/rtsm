@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Set, Union
 
+from colorama import Fore as F
+
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
 from rtsm.solution import Solution
@@ -21,7 +23,7 @@ class Solver(ABC):
         predictor_builder: Union[Callable[[Instance], Predictor], Predictor],
         use_tqdm: bool = False,
         nprocs: int = 1,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Set[Solution]:
         """
         Try to solve an instance of RTSM and provides a set of solutions.
@@ -35,3 +37,6 @@ class Solver(ABC):
         All resources should be freed and the current solution should be returned.
         """
         pass
+
+    def _get_print_prefix_(self) -> str:
+        return f"{F.LIGHTYELLOW_EX}{self.get_name()}{F.RESET}:"

@@ -85,13 +85,13 @@ class RandomSamplingSolver(Solver):
         best_cost = sum(init)
         if verbose:
             print(
-                f"{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_cost}{F.RESET} ({F.LIGHTCYAN_EX}{best_cost / len(init):.1%}{F.RESET})"
+                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_cost}{F.RESET} ({F.LIGHTCYAN_EX}{best_cost / len(init):.1%}{F.RESET})"
             )
 
         budget = samples
 
         if use_tqdm:
-            pbar = tqdm.tqdm(total=samples, smoothing=0)
+            pbar = tqdm.tqdm(total=samples, smoothing=0, desc=self._get_print_prefix_())
         if nprocs > 1:
             pool = ProcessPoolExecutor(nprocs)
             futures = []

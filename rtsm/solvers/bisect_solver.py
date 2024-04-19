@@ -1,4 +1,3 @@
-from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, wait
 from typing import Callable, Generator, List, Optional, Set, Tuple, Union
 
@@ -185,7 +184,7 @@ class BisectSolver(Solver):
         self.best_sol = {init}
         if verbose:
             print(
-                f"{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{initial_best}{F.RESET} ({F.LIGHTCYAN_EX}{initial_best / len(init):.1%}{F.RESET})"
+                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{initial_best}{F.RESET} ({F.LIGHTCYAN_EX}{initial_best / len(init):.1%}{F.RESET})"
             )
         must_keep = __find_necessary__(init, tuple(False for _ in range(n)), predictor)[
             0
@@ -194,13 +193,13 @@ class BisectSolver(Solver):
         unfixed = len(must_keep) - n_kept - (len(init) - sum(init))
         if verbose:
             print(
-                f"{F.LIGHTCYAN_EX}[info]{F.RESET} top level:\n\tbest possible solution: {F.LIGHTCYAN_EX}{n_kept}{F.RESET} ({F.LIGHTCYAN_EX}{n_kept / initial_best:.1%}{F.RESET})\n\tnot fixed: {F.LIGHTCYAN_EX}{unfixed}{F.RESET} ({F.LIGHTCYAN_EX}{unfixed / initial_best:.1%}{F.RESET})"
+                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} top level:\n\tbest possible solution: {F.LIGHTCYAN_EX}{n_kept}{F.RESET} ({F.LIGHTCYAN_EX}{n_kept / initial_best:.1%}{F.RESET})\n\tnot fixed: {F.LIGHTCYAN_EX}{unfixed}{F.RESET} ({F.LIGHTCYAN_EX}{unfixed / initial_best:.1%}{F.RESET})"
             )
         best_possible = max(n_kept, 1)
 
         improvement_queue = []
         if use_tqdm:
-            pbar = tqdm.tqdm(total=samples, smoothing=0)
+            pbar = tqdm.tqdm(total=samples, smoothing=0, dec=self._get_print_prefix_())
         if nprocs > 1:
             pool = ProcessPoolExecutor(nprocs)
             futures = []
