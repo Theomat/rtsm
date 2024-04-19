@@ -49,3 +49,9 @@ class Predictor(ABC):
         Compute the ranking error after we learn a predicotr given the usable information.
         """
         pass
+
+    def export_prediction(self, usable: Tuple[bool, ...], path: str) -> None:
+        """
+        Export the prediction for the specified mask to the specified path.
+        """
+        raise NotImplementedError()
