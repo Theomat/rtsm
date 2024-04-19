@@ -62,6 +62,8 @@ class SplitManager:
     def __accept_one__(
         self, sols: Set[Solution], old_sols: Set[int]
     ) -> Tuple[bool, List[str]]:
+        if len(list(sols)[0].tests) == sum(len(self.solutions[x]) for x in old_sols):
+            return True, list(sols)[0].tests
         new_partition = []
         for x in old_sols:
             new_partition += self.partitions[x]
