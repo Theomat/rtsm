@@ -157,8 +157,6 @@ class FusionSolver(Solver):
     ) -> Set[Solution]:
         self.instance = instance
         n = len(instance.tests)
-        if use_tqdm:
-            pbar = tqdm.tqdm(total=self.splits * 2 - 1, smoothing=0, desc="fusion")
         self.split_manager = SplitManager(
             instance, self.splits, seed, predictor_builder, samples
         )
@@ -167,6 +165,8 @@ class FusionSolver(Solver):
             print(
                 f"{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_score}{F.RESET} ({F.LIGHTCYAN_EX}{best_score/ len(instance.tests):.1%}{F.RESET})"
             )
+        if use_tqdm:
+            pbar = tqdm.tqdm(total=self.splits * 2 - 1, smoothing=0, desc="fusion")
         kwargs["seed"] = seed
         kwargs["use_tqdm"] = False
         kwargs["verbose"] = False
