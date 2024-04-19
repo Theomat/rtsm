@@ -150,7 +150,7 @@ if __name__ == "__main__":
             )
             sys.exit(1)
         with open(initial_solution) as fd:
-            solution_list = json.load(fd)[0]
+            solution_list = json.load(fd)
             if len(solution_list) == 0:
                 print(
                     f"{F.RED}start solution file contains no solution!{F.RESET}",
