@@ -57,4 +57,4 @@ python -m rtsm.check_solution ./examples/x264_etime.csv  -p 8 --splits 14
 ```
 
 This will split the 1397 test into 14 packets of approximately the same size and then do merging in order to find a solution.
-This is much faster than other approaches however for most predictors it may not strictly respect your accuracy constraints.
+This is much faster than other approaches, however we are making more greedy decisions.
