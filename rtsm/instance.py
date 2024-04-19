@@ -35,6 +35,12 @@ class Instance:
         i.__warm_start = self.__warm_start
         return i
 
+    def set_start(self, tests: List[str]) -> None:
+        """
+        Set the initial start of this instance to the selected subset of tests.
+        """
+        self.__warm_start = tuple(t in tests for t in self.tests)
+
     def warm_start(self) -> Tuple[bool, ...]:
         """
         Gives an initial start to solve this instance.

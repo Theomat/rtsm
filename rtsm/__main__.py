@@ -158,7 +158,7 @@ if __name__ == "__main__":
                 )
                 sys.exit(1)
             one_sol = solution_list[0]
-            instance.__warm_start = tuple(t in one_sol for t in instance.tests)
+            instance.set_start(one_sol)
             if verbose:
                 print(
                     f"used start solution to go from {F.CYAN}{len(instance.tests)}{F.RESET} tests to {F.CYAN}{len(one_sol)}{F.RESET} ({F.CYAN}{len(one_sol)/ len(instance.tests):.1%}{F.RESET}) tests"
