@@ -70,6 +70,9 @@ class Instance:
                 instance.store_performance(
                     variant, test, self.performance_matrix[i, index]
                 )
+        if self.__warm_start is not None:
+            start = [t for t, b in zip(self.tests, self.warm_start()) if b]
+            instance.set_start(start)
         return instance
 
     def split(self, n: int, seed: Optional[int] = None) -> List["Instance"]:
