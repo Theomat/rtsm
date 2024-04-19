@@ -152,6 +152,7 @@ class FusionSolver(Solver):
         nprocs: int = 1,
         seed: Optional[int] = None,
         samples: int = 20,
+        verbose: bool = False,
         **kwargs: Any,
     ) -> Set[Solution]:
         self.instance = instance
@@ -161,6 +162,11 @@ class FusionSolver(Solver):
         self.split_manager = SplitManager(
             instance, self.splits, seed, predictor_builder, samples
         )
+        if verbose:
+            best_score = self.split_manager.current_best_score()
+            print(
+                f"{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_score}{F.RESET} ({F.LIGHTCYAN_EX}{best_score/ len(instance.tests):.1%}{F.RESET})"
+            )
         kwargs["seed"] = seed
         kwargs["use_tqdm"] = False
         kwargs["verbose"] = False

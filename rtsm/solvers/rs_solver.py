@@ -66,6 +66,7 @@ class RandomSamplingSolver(Solver):
         nprocs: int = 1,
         samples: int = 10000,
         seed: Optional[int] = None,
+        verbose: bool = False,
         **kwargs,
     ) -> Set[Solution]:
         """
@@ -82,6 +83,10 @@ class RandomSamplingSolver(Solver):
         init = instance.warm_start()
         self.best_sol = {init}
         best_cost = sum(init)
+        if verbose:
+            print(
+                f"{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_cost}{F.RESET} ({F.LIGHTCYAN_EX}{best_cost / len(init):.1%}{F.RESET})"
+            )
 
         budget = samples
 

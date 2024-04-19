@@ -183,15 +183,16 @@ class BisectSolver(Solver):
         init = instance.warm_start()
         initial_best = sum(init)
         self.best_sol = {init}
+        if verbose:
+            print(
+                f"{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{initial_best}{F.RESET} ({F.LIGHTCYAN_EX}{initial_best / len(init):.1%}{F.RESET})"
+            )
         must_keep = __find_necessary__(init, tuple(False for _ in range(n)), predictor)[
             0
         ]
         n_kept = sum(must_keep)
         unfixed = len(must_keep) - n_kept - (len(init) - sum(init))
         if verbose:
-            print(
-                f"{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{initial_best}{F.RESET} ({F.LIGHTCYAN_EX}{initial_best / len(init):.1%}{F.RESET})"
-            )
             print(
                 f"{F.LIGHTCYAN_EX}[info]{F.RESET} top level:\n\tbest possible solution: {F.LIGHTCYAN_EX}{n_kept}{F.RESET} ({F.LIGHTCYAN_EX}{n_kept / initial_best:.1%}{F.RESET})\n\tnot fixed: {F.LIGHTCYAN_EX}{unfixed}{F.RESET} ({F.LIGHTCYAN_EX}{unfixed / initial_best:.1%}{F.RESET})"
             )
