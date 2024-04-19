@@ -49,8 +49,6 @@ Great! Now, I would like to start from a solution that I found to see if I can f
 python -m rtsm.check_solution ./examples/SAT20-MAIN.csv  -p 8 --start my_solution.json
 ```
 
-**Note**: for most predictors the use of the ``-start`` option may not strictly respect your accuracy constraints.
-
 The ``x264_etime.csv`` contains 1397 tests, that's quite a lot, it already took minutes for one sample on 400 tests so it's likely to be very slow.
 Well, we can actually use divide and conquer, it's easy:
 
