@@ -53,7 +53,7 @@ class SplitManager:
         return (
             len(self.queue) == 0
             and len(self.merge_queue) <= 1
-            and min(self.tries.values()) > self.max_tries
+            and (min(self.tries.values()) >= self.max_tries or len(self.tries) <= 1)
         )
 
     def next_instance(self) -> Tuple[int, Instance]:
@@ -99,7 +99,7 @@ class SplitManager:
             if not found:
                 for x in self.dependencies[id]:
                     self.tries[x] += 1
-                    if self.tries[x] <= self.max_tries:
+                    if self.tries[x] < self.max_tries:
                         self.merge_queue.append(x)
                 if len(self.merge_queue) > 2:
                     self.__update_merge_queue__()
