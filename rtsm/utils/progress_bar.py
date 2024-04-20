@@ -13,7 +13,7 @@ class ProgressBar:
         self.has_bar = use_tqdm
         if use_tqdm:
             self.pbar = tqdm.tqdm(
-                total=total, desc=f"{F.LIGHTYELLOW_EX}{name}{F.RESET}", smoothing=1
+                total=total, desc=f"{F.LIGHTYELLOW_EX}{name}{F.RESET}", smoothing=0.5
             )
 
     def update(self, n: int):
