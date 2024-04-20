@@ -50,11 +50,17 @@ class SplitManager:
         return len(self.queue) > 0
 
     def is_done(self) -> bool:
-        return (
-            len(self.queue) == 0
-            and len(self.merge_queue) <= 1
-            and (min(self.tries.values()) >= self.max_tries or len(self.tries) <= 1)
-        )
+        if len(self.queue) == 0:
+            self.__update_merge_queue__()
+            if len(self.merge_queue) <= 1:
+                if len(self.merge_queue) == 1:
+                    t = sorted(self.tries.values())
+                    return len(t) <= 1 or (t[1] >= self.max_tries)
+                else:
+                    return True
+            else:
+                return False
+        return False
 
     def next_instance(self) -> Tuple[int, Instance]:
         return self.queue.pop(0)
