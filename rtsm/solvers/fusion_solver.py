@@ -110,11 +110,12 @@ class SplitManager:
 
         # Update dict
         new_partition = []
-        for x in self.dependencies.get(id, set()):
+        for x in self.dependencies[id]:
             del self.solutions[x]
             new_partition += self.partitions[x]
             del self.partitions[x]
             del self.tries[x]
+        del self.dependencies[id]
         self.partitions[id] = new_partition
         self.solutions[id] = solution
         self.tries[id] = 0
