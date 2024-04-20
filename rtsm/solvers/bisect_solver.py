@@ -2,7 +2,6 @@ from concurrent.futures import ProcessPoolExecutor, wait
 from typing import Callable, Generator, List, Optional, Set, Tuple, Union
 
 import numpy as np
-import tqdm
 from colorama import Fore as F
 
 
@@ -10,6 +9,7 @@ from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
 from rtsm.solution import Solution
 from rtsm.solvers.solver import Solver
+from rtsm.utils.progress_bar import ProgressBar
 
 
 def __split__(
@@ -131,14 +131,11 @@ def __new_sol__(
     current_best: int,
     solutions: Set[Tuple[bool, ...]],
     improvement_queue: List[Set[Tuple[bool, ...]]],
-    pbar: Optional[tqdm.tqdm],
+    pbar: ProgressBar,
 ):
     score = sum(sol)
     if score < current_best:
-        if pbar is not None:
-            pbar.set_postfix_str(
-                f"best: {F.LIGHTYELLOW_EX}{score}{F.RESET} ({F.LIGHTYELLOW_EX}{score/len(sol):.1%}{F.RESET})"
-            )
+        pbar.set_best(score, score / len(sol))
         solutions.clear()
         solutions.add(sol)
         return score
@@ -198,8 +195,9 @@ class BisectSolver(Solver):
         best_possible = max(n_kept, 1)
 
         improvement_queue = []
-        if use_tqdm:
-            pbar = tqdm.tqdm(total=samples, smoothing=0, dec=self._get_print_prefix_())
+        pbar = ProgressBar(total=samples, name=self.get_name(), use_tqdm=use_tqdm)
+        # if use_tqdm:
+        # pbar = tqdm.tqdm(total=samples, smoothing=0, dec=self._get_print_prefix_())
         if nprocs > 1:
             pool = ProcessPoolExecutor(nprocs)
             futures = []
@@ -239,10 +237,9 @@ class BisectSolver(Solver):
                         initial_best,
                         self.best_sol,
                         improvement_queue,
-                        pbar if use_tqdm else None,
+                        pbar,
                     )
-                    if use_tqdm:
-                        pbar.update(1)
+                    pbar.update(1)
             pool.shutdown()
         else:
             for i in range(samples):
@@ -261,14 +258,12 @@ class BisectSolver(Solver):
                     initial_best,
                     self.best_sol,
                     improvement_queue,
-                    pbar if use_tqdm else None,
+                    pbar,
                 )
-                if use_tqdm:
-                    pbar.update(1)
+                pbar.update(1)
                 if initial_best <= best_possible:
                     break
-        if use_tqdm:
-            pbar.close()
+        pbar.close()
         return self.__get_solutions__()
 
     def __get_solutions__(self) -> Set[Solution]:

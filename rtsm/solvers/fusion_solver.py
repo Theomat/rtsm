@@ -1,7 +1,6 @@
 from concurrent.futures import ProcessPoolExecutor, wait
 from typing import Any, Callable, List, Optional, Set, Tuple
 
-import tqdm
 from colorama import Fore as F
 import random
 
@@ -9,6 +8,7 @@ from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
 from rtsm.solvers.solver import Solver
 from rtsm.solution import Solution
+from rtsm.utils.progress_bar import ProgressBar
 
 
 def __solve__(
@@ -168,14 +168,16 @@ class FusionSolver(Solver):
             print(
                 f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_score}{F.RESET} ({F.LIGHTCYAN_EX}{best_score/ len(instance.tests):.1%}{F.RESET})"
             )
-        if use_tqdm:
-            pbar = tqdm.tqdm(
-                total=self.splits * 2 - 1, smoothing=0, desc=self._get_print_prefix_()
-            )
+        pbar = ProgressBar(
+            total=(self.splits * 2 - 1) * self.split_manager.max_tries,
+            name=self.get_name(),
+            use_tqdm=use_tqdm,
+        )
         kwargs["seed"] = seed
         kwargs["use_tqdm"] = False
         kwargs["verbose"] = False
         kwargs["samples"] = samples
+        left_over = 0
         if nprocs > 1:
             pool = ProcessPoolExecutor(nprocs)
             futures = []
@@ -196,12 +198,15 @@ class FusionSolver(Solver):
                 for future in done:
                     accepted = self.split_manager.feed(future.result())
                     futures.remove(future)
-                    if use_tqdm and accepted:
+                    if accepted:
+                        todo = max(0, self.split_manager.max_tries - left_over)
+                        left_over -= self.split_manager.max_tries - todo
+                        pbar.update(todo)
+                    else:
                         pbar.update(1)
-                        score = self.split_manager.current_best_score()
-                        pbar.set_postfix_str(
-                            f"best: {F.LIGHTYELLOW_EX}{score}{F.RESET} ({F.LIGHTYELLOW_EX}{score/n:.1%}{F.RESET})"
-                        )
+                        left_over += 1
+                score = self.split_manager.current_best_score()
+                pbar.set_best(score, score / n)
             pool.shutdown()
         else:
             sub_solver = self.solver_builder()
@@ -213,14 +218,16 @@ class FusionSolver(Solver):
                     **kwargs,
                 )
                 accepted = self.split_manager.feed((id, out))
-                if use_tqdm and accepted:
+                if accepted:
+                    todo = max(0, self.split_manager.max_tries - left_over)
+                    left_over -= self.split_manager.max_tries - todo
+                    pbar.update(todo)
+                else:
                     pbar.update(1)
-                    score = self.split_manager.current_best_score()
-                    pbar.set_postfix_str(
-                        f"best: {F.LIGHTYELLOW_EX}{score}{F.RESET} ({F.LIGHTYELLOW_EX}{score/n:.1%}{F.RESET})"
-                    )
-        if use_tqdm:
-            pbar.close()
+                    left_over += 1
+                score = self.split_manager.current_best_score()
+                pbar.set_best(score, score / n)
+        pbar.close()
         return self.__get_solutions__()
 
     def early_exit(self) -> Set[Solution]:

@@ -1,29 +1,25 @@
-from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, wait
 from typing import Callable, Optional, Set, Tuple, Union
 
 import numpy as np
-import tqdm
 from colorama import Fore as F
 
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
 from rtsm.solution import Solution
 from rtsm.solvers.solver import Solver
+from rtsm.utils.progress_bar import ProgressBar
 
 
 def __new_sol__(
     sol: Tuple[bool, ...],
     current_best: int,
     solutions: Set[Tuple[bool, ...]],
-    pbar: Optional[tqdm.tqdm],
+    pbar: ProgressBar,
 ):
     score = sum(sol)
     if score < current_best:
-        if pbar is not None:
-            pbar.set_postfix_str(
-                f"best: {F.LIGHTYELLOW_EX}{score}{F.RESET} ({F.LIGHTYELLOW_EX}{score/len(sol):.1%}{F.RESET})"
-            )
+        pbar.set_best(score, score / len(sol))
         solutions.clear()
         solutions.add(sol)
         return score
@@ -90,8 +86,7 @@ class RandomSamplingSolver(Solver):
 
         budget = samples
 
-        if use_tqdm:
-            pbar = tqdm.tqdm(total=samples, smoothing=0, desc=self._get_print_prefix_())
+        pbar = ProgressBar(total=samples, name=self.get_name(), use_tqdm=use_tqdm)
         if nprocs > 1:
             pool = ProcessPoolExecutor(nprocs)
             futures = []
@@ -115,15 +110,14 @@ class RandomSamplingSolver(Solver):
                     has_found, used, out = future.result()
                     futures.remove(future)
                     budget -= used
-                    if use_tqdm:
-                        pbar.update(used)
+                    pbar.update(used)
                     if not has_found:
                         continue
                     best_cost = __new_sol__(
                         out,
                         best_cost,
                         self.best_sol,
-                        pbar if use_tqdm else None,
+                        pbar,
                     )
             pool.shutdown()
 
@@ -137,18 +131,16 @@ class RandomSamplingSolver(Solver):
                     min(SAMPLING_UNIT, budget),
                 )
                 budget -= used
-                if use_tqdm:
-                    pbar.update(used)
+                pbar.update(used)
                 if not has_found:
                     continue
                 best_cost = __new_sol__(
                     out,
                     best_cost,
                     self.best_sol,
-                    pbar if use_tqdm else None,
+                    pbar,
                 )
-        if use_tqdm:
-            pbar.close()
+        pbar.close()
 
         return self.__get_solutions__()
 
