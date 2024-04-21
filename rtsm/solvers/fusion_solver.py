@@ -109,8 +109,6 @@ class SplitManager:
                     self.tries[x] += 1
                     if self.tries[x] < self.max_tries:
                         self.merge_queue.append(x)
-                if len(self.merge_queue) > 2:
-                    self.__update_merge_queue__()
                 del self.dependencies[id]
                 return False
         else:
@@ -129,8 +127,6 @@ class SplitManager:
         self.tries[id] = 0
 
         self.merge_queue.append(id)
-        # Update merge queue
-        self.__update_merge_queue__()
         return True
 
     def current_best_score(self) -> int:
