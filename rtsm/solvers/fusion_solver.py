@@ -52,6 +52,8 @@ class SplitManager:
     def is_done(self) -> bool:
         if len(self.queue) == 0:
             self.__update_merge_queue__()
+            if len(self.queue) > 0:
+                return False
             if len(self.merge_queue) <= 1:
                 if len(self.merge_queue) == 1:
                     t = sorted(self.tries.values())
