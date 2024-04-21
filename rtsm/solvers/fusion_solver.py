@@ -218,7 +218,7 @@ class FusionSolver(Solver):
             pool.shutdown()
         else:
             sub_solver = self.solver_builder()
-            while self.split_manager.has_next():
+            while not self.split_manager.is_done():
                 id, sub_instance = self.split_manager.next_instance()
                 out = sub_solver.solve(
                     sub_instance,
