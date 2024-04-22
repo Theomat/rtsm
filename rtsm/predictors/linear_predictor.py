@@ -44,11 +44,14 @@ class LinearRegressionPredictor(Predictor):
         return self.ranking_error(usable) <= 1 - self.accuracy
 
     def ranking_error(self, usable: Tuple[bool, ...]) -> bool:
-        X = self.Xt[:, usable]
-        Y = self.Yt[:, [not x for x in usable]]
+        X = self.Xt[:, :, usable]
+        Y = self.Yt[:, :, [not x for x in usable]]
         D = np.sum(self.Xt, axis=-1)
-        for i in range(Y.shape[1]):
-            D += __learn_linear_model__(X, Y[:, i].reshape((-1)), self.positive)[1]
+        for h in range(X.shape[0]):
+            for i in range(Y.shape[-1]):
+                D[h, :] += __learn_linear_model__(
+                    X[h, :, :], Y[h, :, i].reshape((-1)), self.positive
+                )[1]
         return ranking_error(self.Rt, to_ranking(D))
 
     def export_prediction(self, usable: Tuple[bool], path: str) -> None:
@@ -56,18 +59,22 @@ class LinearRegressionPredictor(Predictor):
             "type": self.get_name(),
             "input": self.instance.get_tests(usable),
             "output": [t for t, b in zip(self.instance.tests, usable) if not b],
+            "performances": self.instance.performances,
             "coefficients": [],
             "translation": [],
         }
-        X = self.Xt[:, usable]
-        Y = self.Yt[:, [not x for x in usable]]
-        coeffs = np.zeros((X.shape[1], Y.shape[1]))
-        intercept = np.zeros((Y.shape[1]))
-        for i in range(Y.shape[1]):
-            model = __learn_linear_model__(X, Y[:, i].reshape((-1)), self.positive)[0]
-            coeffs[:, i] = model.coef_
-            intercept[i] = model.intercept_
-        out["coefficients"] = coeffs.T.tolist()
+        X = self.Xt[:, :, usable]
+        Y = self.Yt[:, :, [not x for x in usable]]
+        coeffs = np.zeros((X.shape[0], X.shape[-1], Y.shape[-1]))
+        intercept = np.zeros((X.shape[0], Y.shape[-1]))
+        for h in range(X.shape[0]):
+            for i in range(Y.shape[-1]):
+                model = __learn_linear_model__(
+                    X[h, :, :], Y[h, :, i].reshape((-1)), self.positive
+                )[0]
+                coeffs[h, :, i] = model.coef_
+                intercept[h, i] = model.intercept_
+        out["coefficients"] = coeffs.transpose((0, 2, 1)).tolist()
         out["translation"] = intercept.tolist()
         with open(path, "w") as fd:
             json.dump(out, fd)

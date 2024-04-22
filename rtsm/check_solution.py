@@ -81,8 +81,8 @@ if __name__ == "__main__":
     predictor: Predictor = predictors[args.predictor](instance)
     print(f"prediction model: {F.CYAN}{predictor.get_name()}{F.RESET}")
 
-    R = to_ranking(np.sum(instance.performance_matrix, axis=1))
-    sR = to_ranking(np.sum(instance.subset(one_sol).performance_matrix, axis=1))
+    R = to_ranking(np.sum(instance.performance_matrix, axis=-1))
+    sR = to_ranking(np.sum(instance.subset(one_sol).performance_matrix, axis=-1))
     print(
         f"ranking error without prediction: {F.GREEN}{ranking_error(R, sR):.2%}{F.RESET}"
     )

@@ -10,10 +10,11 @@ class Instance:
     Represents an instance of the RTSM problem.
     """
 
+    performances: List[str]
     variants: List[str]
     tests: List[str]
     performance_matrix: np.ndarray = field(default_factory=lambda: np.zeros((1,)))
-    """Matrix (variant, test)"""
+    """Matrix (performance, variant, test)"""
     __check: Optional[np.ndarray] = field(
         default=None, compare=False, repr=False, hash=False
     )
@@ -22,7 +23,9 @@ class Instance:
     )
 
     def __post_init__(self):
-        self.performance_matrix = np.zeros((len(self.variants), len(self.tests)))
+        self.performance_matrix = np.zeros(
+            (len(self.performances), len(self.variants), len(self.tests))
+        )
         self.__check = np.zeros_like(self.performance_matrix)
 
     def copy(self) -> "Instance":
@@ -54,22 +57,27 @@ class Instance:
         """
         Return the same instance but with variants and tests swapped.
         """
-        i = Instance(self.tests, self.variants)
-        i.performance_matrix = self.performance_matrix.transpose()
-        i.__check = self.__check.transpose() if self.__check is not None else None
-        return i
+        instance = Instance(self.performances, self.tests, self.variants)
+        for h, performance in enumerate(self.performances):
+            for i, variant in enumerate(self.variants):
+                for index, test in enumerate(self.tests):
+                    instance.store_performance(
+                        performance, test, variant, self.performance_matrix[h, i, index]
+                    )
+        return instance
 
     def subset(self, selected_tests: List[str]) -> "Instance":
         """
         Returns the instance where only the selected subset of tests are kept.
         """
         index2test = {self.tests.index(t): t for t in selected_tests}
-        instance = Instance(self.variants[:], list(index2test.values()))
-        for i, variant in enumerate(self.variants):
-            for index, test in index2test.items():
-                instance.store_performance(
-                    variant, test, self.performance_matrix[i, index]
-                )
+        instance = Instance(self.performances, self.variants, list(index2test.values()))
+        for h, performance in enumerate(self.performances):
+            for i, variant in enumerate(self.variants):
+                for index, test in index2test.items():
+                    instance.store_performance(
+                        performance, variant, test, self.performance_matrix[h, i, index]
+                    )
         if self.__warm_start is not None:
             start = [t for t, b in zip(self.tests, self.warm_start()) if b]
             instance.set_start(start)
@@ -96,16 +104,25 @@ class Instance:
         return out
 
     def store_performance(
-        self, variant: Union[str, int], test: Union[str, int], performance: float
+        self,
+        performance: Union[str, int],
+        variant: Union[str, int],
+        test: Union[str, int],
+        value: float,
     ):
         """
         Store the specified performance.
         """
+        pi = (
+            self.performances.index(performance)
+            if isinstance(performance, str)
+            else performance
+        )
         vi = self.variants.index(variant) if isinstance(variant, str) else variant
         ti = self.tests.index(test) if isinstance(test, str) else test
-        self.performance_matrix[vi, ti] = performance
+        self.performance_matrix[pi, vi, ti] = value
         if self.__check is not None:
-            self.__check[vi, ti] = 1
+            self.__check[pi, vi, ti] = 1
 
     def check_filled(self) -> bool:
         """

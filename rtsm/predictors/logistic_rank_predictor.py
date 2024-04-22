@@ -28,14 +28,15 @@ class LogisticRankPredictor(Predictor):
 
     def __init__(self, instance: Instance, accuracy: float = 1.0, **kwargs) -> None:
         self.instance = instance
-        m = instance.performance_matrix.shape[0]
-        n = instance.performance_matrix.shape[1]
+        h = instance.performance_matrix.shape[0]
+        m = instance.performance_matrix.shape[1]
+        n = instance.performance_matrix.shape[2]
         self.Rt = to_ranking(np.sum(self.instance.performance_matrix, axis=-1))
-        self.Xt = np.zeros((m * m, 2 * n))
+        self.Xt = np.zeros((h, m * m, 2 * n))
         for i in range(m):
-            self.Xt[i * m : (i + 1) * m, n:] = instance.performance_matrix[:, :]
-            self.Xt[i * m : (i + 1) * m, :n] = np.broadcast_to(
-                instance.performance_matrix[i, :], (m, n)
+            self.Xt[:, i * m : (i + 1) * m, n:] = instance.performance_matrix[:, :, :]
+            self.Xt[:, i * m : (i + 1) * m, :n] = np.broadcast_to(
+                instance.performance_matrix[:, i, :], (h, m, n)
             )
 
         self.accuracy = accuracy
@@ -45,19 +46,21 @@ class LogisticRankPredictor(Predictor):
 
     def can_predict(self, usable: Tuple[bool, ...]) -> bool:
         mask = usable + usable
-        X = self.Xt[:, mask]
+        X = self.Xt[:, :, mask]
         new_R = np.zeros_like(self.Rt)
         total_error = 0
-        m = self.instance.performance_matrix.shape[0]
-        n = self.instance.performance_matrix.shape[1]
-        for i in range(m):
-            pred, error = __learn_boolean_linear_model__(
-                X[i * m : (i + 1) * m, :], self.Rt[i, :]
-            )
-            new_R[i, :] = pred
-            total_error += error
-            if total_error / (n * n) > 1 - self.accuracy:
-                return False
+        l = self.instance.performance_matrix.shape[0]
+        m = self.instance.performance_matrix.shape[1]
+        n = self.instance.performance_matrix.shape[2]
+        for h in range(l):
+            for i in range(m):
+                pred, error = __learn_boolean_linear_model__(
+                    X[h, i * m : (i + 1) * m, :], self.Rt[h, i, :]
+                )
+                new_R[h, i, :] = pred
+                total_error += error
+                if total_error / (n * n) > 1 - self.accuracy:
+                    return False
 
         if ranking_error(self.Rt, new_R) > 1 - self.accuracy:
             return False
@@ -65,14 +68,16 @@ class LogisticRankPredictor(Predictor):
 
     def ranking_error(self, usable: Tuple[bool, ...]) -> bool:
         mask = usable + usable
-        X = self.Xt[:, mask]
+        X = self.Xt[:, :, mask]
         new_R = np.zeros_like(self.Rt)
         total_error = 0
-        m = self.instance.performance_matrix.shape[0]
-        for i in range(m):
-            pred, error = __learn_boolean_linear_model__(
-                X[i * m : (i + 1) * m, :], self.Rt[i, :]
-            )
-            new_R[i, :] = pred
+        l = self.instance.performance_matrix.shape[0]
+        m = self.instance.performance_matrix.shape[1]
+        for h in range(l):
+            for i in range(m):
+                pred, error = __learn_boolean_linear_model__(
+                    X[h, i * m : (i + 1) * m, :], self.Rt[h, i, :]
+                )
+            new_R[h, i, :] = pred
             total_error += error
         return ranking_error(self.Rt, new_R)

@@ -8,10 +8,10 @@ from rtsm.instance import Instance
 
 def to_ranking(perfs: np.ndarray) -> np.ndarray:
     """
-    Transforms a performance vector (variant) into a ranking matrix.
+    Transforms a performance matrix (k, variant) into a ranking matrix.
     """
-    n = perfs.shape[0]
-    return np.broadcast_to(perfs, (n, n)).T > perfs
+    n = perfs.shape[1]
+    return np.repeat(perfs, n, axis=1).reshape((-1, n, n)) > perfs.reshape((-1, 1, n))
 
 
 def ranking_error(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
@@ -19,11 +19,9 @@ def ranking_error(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
     Takes two ranking matrices and returns the percentage of errors.
     The percentage of errors is percentage of order relations that were different.
     """
-    n = target_ranks.shape[0]
-    num = np.sum(target_ranks != pred_ranks) - n
-    if num <= 0:
-        return 0
-    return num / (np.prod(target_ranks.shape) - n)
+    num = np.max(np.sum(target_ranks != pred_ranks, axis=(1, 2)))
+    n = target_ranks.shape[1]
+    return num / (np.prod(target_ranks.shape[1:]) - n)
 
 
 class Predictor(ABC):

@@ -35,24 +35,30 @@ class LogisticBooleanPredictor(Predictor):
         return "logistic-boolean"
 
     def can_predict(self, usable: Tuple[bool, ...]) -> bool:
-        X = self.Xt[:, usable]
-        Y = self.Yt[:, [not x for x in usable]]
+        X = self.Xt[:, :, usable]
+        Y = self.Yt[:, :, [not x for x in usable]]
 
-        for i in range(Y.shape[1]):
-            coeffs, error = __learn_boolean_linear_model__(X, Y[:, i].reshape((-1)))
+        for h in range(X.shape[0]):
+            for i in range(Y.shape[-1]):
+                pred, error = __learn_boolean_linear_model__(
+                    X[h, :, :], Y[h, :, i].reshape((-1))
+                )
             if error > 0:
                 return False
         return True
 
     def ranking_error(self, usable: Tuple[bool, ...]) -> bool:
-        X = self.Xt[:, usable]
+        X = self.Xt[:, :, usable]
         mask = [not x for x in usable]
-        Y = self.Yt[:, mask]
+        Y = self.Yt[:, :, mask]
         cp = self.Xt.copy()
 
-        for i in range(Y.shape[1]):
-            pred, error = __learn_boolean_linear_model__(X, Y[:, i].reshape((-1)))
-            cp[:, mask][:, i] = pred
+        for h in range(X.shape[0]):
+            for i in range(Y.shape[-1]):
+                pred, error = __learn_boolean_linear_model__(
+                    X[h, :, :], Y[h, :, i].reshape((-1))
+                )
+                cp[:, :, mask][:, :, i] = pred
         return ranking_error(
             to_ranking(np.sum(self.instance.performance_matrix, axis=-1)),
             to_ranking(np.sum(cp, axis=-1)),

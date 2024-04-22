@@ -13,20 +13,23 @@ class CSVDataLoader(DataLoader):
         with open(path) as fd:
             rows = [row for row in csv.reader(fd)]
         names = rows.pop(0)
+        performances = [name for name in names if name not in ["variant", "test"]]
         indices = [
             names.index("variant"),
             names.index("test"),
-            names.index("performance"),
         ]
+        for perf in performances:
+            indices.append(names.index(perf))
         # Find the sets
         variants = set()
         tests = set()
         for row in rows:
             tests.add(row[indices[1]])
             variants.add(row[indices[0]])
-        instance = Instance(sorted(variants), sorted(tests))
+        instance = Instance(sorted(performances), sorted(variants), sorted(tests))
         for row in rows:
-            instance.store_performance(
-                row[indices[0]], row[indices[1]], float(row[indices[2]])
-            )
+            for perf, index in zip(performances, indices[2:]):
+                instance.store_performance(
+                    perf, row[indices[0]], row[indices[1]], float(row[index])
+                )
         return instance
