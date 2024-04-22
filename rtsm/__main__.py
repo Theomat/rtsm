@@ -42,6 +42,9 @@ if __name__ == "__main__":
         "logistic-bool": LogisticBooleanPredictor,
         "logistic-rank": LogisticRankPredictor,
         "linear": LinearRegressionPredictor,
+        "linear+": lambda x, **kwargs: LinearRegressionPredictor(
+            x, positive=True, **kwargs
+        ),
     }
 
     # Solvers

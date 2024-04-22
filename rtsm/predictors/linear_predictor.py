@@ -9,9 +9,9 @@ from sklearn.linear_model import LinearRegression
 
 
 def __learn_linear_model__(
-    A: np.ndarray, y: np.ndarray
+    A: np.ndarray, y: np.ndarray, positive: bool
 ) -> Tuple[LinearRegression, np.ndarray]:
-    model = LinearRegression()
+    model = LinearRegression(positive=positive)
     model.fit(A, y)
     return model, model.predict(A)
 
@@ -21,14 +21,23 @@ class LinearRegressionPredictor(Predictor):
     A predictor that predicts float values using linear regression.
     """
 
-    def __init__(self, instance: Instance, accuracy: float = 1.0, **kwargs) -> None:
+    def __init__(
+        self,
+        instance: Instance,
+        accuracy: float = 1.0,
+        positive: bool = False,
+        **kwargs
+    ) -> None:
         self.instance = instance
         self.Xt = instance.performance_matrix.copy()
         self.Yt = self.Xt.copy()
         self.Rt = to_ranking(np.sum(self.Xt, axis=-1))
         self.accuracy = accuracy
+        self.positive = positive
 
     def get_name(self) -> str:
+        if self.positive:
+            return "linear+"
         return "linear"
 
     def can_predict(self, usable: Tuple[bool, ...]) -> bool:
@@ -39,12 +48,12 @@ class LinearRegressionPredictor(Predictor):
         Y = self.Yt[:, [not x for x in usable]]
         D = np.sum(self.Xt, axis=-1)
         for i in range(Y.shape[1]):
-            D += __learn_linear_model__(X, Y[:, i].reshape((-1)))[1]
+            D += __learn_linear_model__(X, Y[:, i].reshape((-1)), self.positive)[1]
         return ranking_error(self.Rt, to_ranking(D))
 
     def export_prediction(self, usable: Tuple[bool], path: str) -> None:
         out = {
-            "type": "linear",
+            "type": self.get_name(),
             "input": self.instance.get_tests(usable),
             "output": [t for t, b in zip(self.instance.tests, usable) if not b],
             "coefficients": [],
@@ -55,7 +64,7 @@ class LinearRegressionPredictor(Predictor):
         coeffs = np.zeros((X.shape[1], Y.shape[1]))
         intercept = np.zeros((Y.shape[1]))
         for i in range(Y.shape[1]):
-            model = __learn_linear_model__(X, Y[:, i].reshape((-1)))[0]
+            model = __learn_linear_model__(X, Y[:, i].reshape((-1)), self.positive)[0]
             coeffs[:, i] = model.coef_
             intercept[i] = model.intercept_
         out["coefficients"] = coeffs.T.tolist()
