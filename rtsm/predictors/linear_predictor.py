@@ -58,7 +58,7 @@ class LinearRegressionPredictor(Predictor):
             model = __learn_linear_model__(X, Y[:, i].reshape((-1)))[0]
             coeffs[:, i] = model.coef_
             intercept[i] = model.intercept_
-        out["coefficients"] = coeffs.tolist()
+        out["coefficients"] = coeffs.T.tolist()
         out["translation"] = intercept.tolist()
         with open(path, "w") as fd:
             json.dump(out, fd)
