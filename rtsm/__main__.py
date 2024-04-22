@@ -133,7 +133,15 @@ if __name__ == "__main__":
 
     samples: int = args.samples
     initial_solution: str = args.start or ""
-
+    # Check output file can be written to otherwise it is useless to compute but not being able to save
+    try:
+        with open(args.output, "w") as fd:
+            pass
+    except IOError as e:
+        print(
+            f"{F.RED}output file cannot be written to:{F.RESET}\n", e, file=sys.stderr
+        )
+        sys.exit(1)
     # Check then load data
     loaders = [d for d in data_loaders if d.match(args.file)]
     if len(loaders) == 0:
