@@ -1,47 +1,17 @@
 if __name__ == "__main__":
-    from typing import Callable, Dict
     import argparse
     import sys
     import os
     import json
 
-    import numpy as np
     from colorama import Fore as F
 
-    from rtsm.instance import Instance
-    from rtsm.data_loaders.csv_data_loader import CSVDataLoader
     from rtsm.predictors.predictor import Predictor
-    from rtsm.predictors.logistic_boolean_predictor import LogisticBooleanPredictor
-    from rtsm.predictors.logistic_rank_predictor import LogisticRankPredictor
-    from rtsm.predictors.linear_predictor import LinearRegressionPredictor
+    from rtsm.helper import get_predictors, get_data_loaders
 
     # Data Loaders
-    data_loaders = [CSVDataLoader()]
-    supported_extensions = set()
-    for loader in data_loaders:
-        supported_extensions.update(loader.get_extensions())
-
-    # Predictors
-    def adaptative_predictor(inst: Instance, **kwargs) -> Predictor:
-        if np.unique(inst.performance_matrix).shape[0] == 2:
-            return LogisticBooleanPredictor(inst, **kwargs)
-        return LinearRegressionPredictor(inst, **kwargs)
-
-    predictors: Dict[str, Callable[[Instance], Predictor]] = {
-        "auto": adaptative_predictor,
-        "logistic-bool": LogisticBooleanPredictor,
-        "logistic-rank": LogisticRankPredictor,
-        "linear": LinearRegressionPredictor,
-        "linear+": lambda x, **kwargs: LinearRegressionPredictor(
-            x, positive=True, **kwargs
-        ),
-    }
-
-    # Data Loaders
-    data_loaders = [CSVDataLoader()]
-    supported_extensions = set()
-    for loader in data_loaders:
-        supported_extensions.update(loader.get_extensions())
+    data_loaders, supported_extensions = get_data_loaders()
+    predictors = get_predictors()
 
     parser = argparse.ArgumentParser(
         description="Export prediction model for specific solution",

@@ -3,53 +3,24 @@ if __name__ == "__main__":
     import sys
     import os
     import json
-    from typing import List, Dict, Callable
+    from typing import Callable
     import atexit
 
     from colorama import Fore as F
-    import numpy as np
 
     from rtsm.instance import Instance
     from rtsm.solution import Solution
-    from rtsm.data_loaders.csv_data_loader import CSVDataLoader
 
     from rtsm.predictors.predictor import Predictor
-    from rtsm.predictors.logistic_boolean_predictor import LogisticBooleanPredictor
-    from rtsm.predictors.logistic_rank_predictor import LogisticRankPredictor
-    from rtsm.predictors.linear_predictor import LinearRegressionPredictor
+    from rtsm.helper import get_predictors, get_data_loaders, get_solvers
 
-    from rtsm.solvers.solver import Solver
-    from rtsm.solvers.bisect_solver import BisectSolver
-    from rtsm.solvers.rs_solver import RandomSamplingSolver
     from rtsm.solvers.fusion_solver import FusionSolver
 
     from rtsm.utils.argparse_helper import positive_int, bounded_float
 
-    # Data Loaders
-    data_loaders = [CSVDataLoader()]
-    supported_extensions = set()
-    for loader in data_loaders:
-        supported_extensions.update(loader.get_extensions())
-
-    # Predictors
-    def adaptative_predictor(inst: Instance, **kwargs) -> Predictor:
-        if np.unique(inst.performance_matrix).shape[0] == 2:
-            return LogisticBooleanPredictor(inst, **kwargs)
-        return LinearRegressionPredictor(inst, **kwargs)
-
-    predictors: Dict[str, Callable[[Instance], Predictor]] = {
-        "auto": adaptative_predictor,
-        "logistic-bool": LogisticBooleanPredictor,
-        "logistic-rank": LogisticRankPredictor,
-        "linear": LinearRegressionPredictor,
-        "linear+": lambda x, **kwargs: LinearRegressionPredictor(
-            x, positive=True, **kwargs
-        ),
-    }
-
-    # Solvers
-    __solver_list__: List[Solver] = [BisectSolver(), RandomSamplingSolver()]
-    solvers = {solver.get_name(): solver for solver in __solver_list__}
+    data_loaders, supported_extensions = get_data_loaders()
+    predictors = get_predictors()
+    solvers = get_solvers()
 
     parser = argparse.ArgumentParser(
         description="Ranked test suite minimisation",
