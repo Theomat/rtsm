@@ -1,6 +1,8 @@
 from typing import Callable, Dict, Set, Tuple, List
+import sys
 
 import numpy as np
+from colorama import Fore as F
 
 from rtsm.data_loaders.csv_data_loader import CSVDataLoader
 from rtsm.data_loaders.data_loader import DataLoader
@@ -21,6 +23,24 @@ def get_data_loaders() -> Tuple[List[DataLoader], Set[str]]:
     for loader in data_loaders:
         supported_extensions.update(loader.get_extensions())
     return data_loaders, supported_extensions
+
+
+def try_load_instance(
+    path: str, data_loaders: List[DataLoader], swap: bool = False
+) -> Instance:
+    loaders = [d for d in data_loaders if d.match(path)]
+    if len(loaders) == 0:
+        print(f"{F.RED}file format not supported:{F.RESET}", path, file=sys.stderr)
+        sys.exit(1)
+    instance = loaders.pop(0).load(path)
+    # Swap instance
+    if swap:
+        instance = instance.swap()
+    if not instance.check_filled():
+        print(
+            f"{F.YELLOW}warning:{F.RESET} the performance matrix is not completely filled!"
+        )
+    return instance
 
 
 def get_predictors() -> Dict[str, Callable[[Instance], Predictor]]:

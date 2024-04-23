@@ -12,7 +12,12 @@ if __name__ == "__main__":
     from rtsm.solution import Solution
 
     from rtsm.predictors.predictor import Predictor
-    from rtsm.helper import get_predictors, get_data_loaders, get_solvers
+    from rtsm.helper import (
+        get_predictors,
+        get_data_loaders,
+        get_solvers,
+        try_load_instance,
+    )
 
     from rtsm.solvers.fusion_solver import FusionSolver
 
@@ -114,14 +119,8 @@ if __name__ == "__main__":
         )
         sys.exit(1)
     # Check then load data
-    loaders = [d for d in data_loaders if d.match(args.file)]
-    if len(loaders) == 0:
-        print(f"{F.RED}file format not supported:{F.RESET}", args.file, file=sys.stderr)
-        sys.exit(1)
-    instance = loaders.pop(0).load(args.file)
-    # Swap instance
-    if swap:
-        instance = instance.swap()
+    instance = try_load_instance(args.file, data_loaders, swap)
+
     # Warm start with previous solution
     if len(initial_solution) > 0:
         if not os.path.exists(initial_solution) or not os.path.isfile(initial_solution):

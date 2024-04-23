@@ -7,7 +7,7 @@ if __name__ == "__main__":
     from colorama import Fore as F
 
     from rtsm.predictors.predictor import Predictor
-    from rtsm.helper import get_predictors, get_data_loaders
+    from rtsm.helper import get_predictors, get_data_loaders, try_load_instance
 
     # Data Loaders
     data_loaders, supported_extensions = get_data_loaders()
@@ -45,21 +45,10 @@ if __name__ == "__main__":
     initial_solution: str = args.solution or ""
 
     # Check then load data
-    loaders = [d for d in data_loaders if d.match(args.file)]
-    if len(loaders) == 0:
-        print(f"{F.RED}file format not supported:{F.RESET}", args.file, file=sys.stderr)
-        sys.exit(1)
-    instance = loaders.pop(0).load(args.file)
-    # Swap instance
-    if swap:
-        instance = instance.swap()
+    instance = try_load_instance(args.file, data_loaders, swap)
     print(
         f"loaded {F.CYAN}{len(instance.variants)}{F.RESET} variants and {F.CYAN}{len(instance.tests)}{F.RESET} tests"
     )
-    if not instance.check_filled():
-        print(
-            f"{F.YELLOW}warning:{F.RESET} the performance matrix is not completely filled!"
-        )
     # Load solution
     one_sol = []
     if not os.path.exists(initial_solution) or not os.path.isfile(initial_solution):
