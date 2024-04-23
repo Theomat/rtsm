@@ -117,7 +117,10 @@ if __name__ == "__main__":
         ranks_original = to_ranks(R)
 
         new_variants = set(full.variants) - set(instance.variants)
-        print(f"\tnew variants ({F.LIGHTYELLOW_EX}{len(new_variants)}{F.RESET}):", ", ".join(new_variants))
+        print(
+            f"\tnew variants ({F.LIGHTYELLOW_EX}{len(new_variants)}{F.RESET}):",
+            ", ".join(new_variants),
+        )
         prediction = predictor.export_prediction(mask)
         copy = full.performance_matrix.copy()
         rev_mask = np.logical_not(np.asarray(mask))
