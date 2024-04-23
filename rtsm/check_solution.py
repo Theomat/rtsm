@@ -28,6 +28,11 @@ if __name__ == "__main__":
         type=str,
         help="the solution to compare with",
     )
+    parser.add_argument(
+        "--full",
+        type=str,
+        help=f"file containing a super instance of the data, supported extensions are: {', '.join(supported_extensions)}",
+    )
     parser.add_argument("--swap", action="store_true", help="swap variants and tests")
     parser.add_argument(
         "--predictor",
@@ -91,7 +96,8 @@ if __name__ == "__main__":
     print("with prediction:")
 
     start = time.perf_counter()
-    ranking_pred = predictor.get_ranking([x in one_sol for x in instance.tests])
+    mask = [x in one_sol for x in instance.tests]
+    ranking_pred = predictor.get_ranking(mask)
     duration = time.perf_counter() - start
     error = ranking_error(R, ranking_pred)
     ranks_pred = to_ranks(ranking_pred)
@@ -100,3 +106,28 @@ if __name__ == "__main__":
     )
     spearman_desc = spearman_to_str(ranks_original, ranks_pred)
     print(f"\tspearman: {spearman_desc}")
+
+    if args.full is not None:
+        print()
+        full = try_load_instance(args.full, data_loaders, swap)
+        print(
+            f"loaded full {F.CYAN}{len(instance.variants)}{F.RESET} variants and {F.CYAN}{len(instance.tests)}{F.RESET} tests"
+        )
+        R = to_ranking(np.sum(full.performance_matrix, axis=-1))
+        ranks_original = to_ranks(R)
+
+        new_variants = set(full.variants) - set(instance.variants)
+        print(f"\tnew variants ({F.LIGHTYELLOW_EX}{len(new_variants)}{F.RESET}):", ", ".join(new_variants))
+        prediction = predictor.export_prediction(mask)
+        copy = full.performance_matrix.copy()
+        rev_mask = np.logical_not(np.asarray(mask))
+        copy[:, :, rev_mask] = 0
+        missing = prediction.predict(full.performance_matrix[:, :, mask])
+        copy[:, :, rev_mask] = missing
+
+        Rpred = to_ranking(np.sum(copy, axis=-1))
+        ranks_pred = to_ranks(Rpred)
+        error = ranking_error(R, Rpred)
+        print(f"\tranking error: {F.GREEN}{error:.2%}{F.RESET}")
+        spearman_desc = spearman_to_str(ranks_original, ranks_pred)
+        print(f"\tspearman: {spearman_desc}")
