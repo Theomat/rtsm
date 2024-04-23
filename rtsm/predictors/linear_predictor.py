@@ -41,9 +41,9 @@ class LinearRegressionPredictor(Predictor):
         return "linear"
 
     def can_predict(self, usable: Tuple[bool, ...]) -> bool:
-        return self.ranking_error(usable) <= 1 - self.accuracy
+        return ranking_error(self.Rt, self.get_ranking(usable)) <= 1 - self.accuracy
 
-    def ranking_error(self, usable: Tuple[bool, ...]) -> bool:
+    def get_ranking(self, usable: Tuple[bool, ...]) -> np.ndarray:
         X = self.Xt[:, :, usable]
         Y = self.Yt[:, :, [not x for x in usable]]
         D = np.sum(self.Xt, axis=-1)
@@ -52,7 +52,7 @@ class LinearRegressionPredictor(Predictor):
                 D[h, :] += __learn_linear_model__(
                     X[h, :, :], Y[h, :, i].reshape((-1)), self.positive
                 )[1]
-        return ranking_error(self.Rt, to_ranking(D))
+        return to_ranking(D)
 
     def export_prediction(self, usable: Tuple[bool], path: str) -> None:
         out = {

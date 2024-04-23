@@ -35,16 +35,17 @@ class Predictor(ABC):
         """
         pass
 
+    @abstractmethod
     def can_predict(self, usable: Tuple[bool, ...]) -> bool:
         """
         Return true if and only if the performances are predictable according to this predictor.
         """
-        return self.ranking_error(usable) <= 0
+        pass
 
     @abstractmethod
-    def ranking_error(self, usable: Tuple[bool, ...]) -> float:
+    def get_ranking(self, usable: Tuple[bool, ...]) -> np.ndarray:
         """
-        Compute the ranking error after we learn a predicotr given the usable information.
+        Compute the ranking matrix after we learn a predictor given the usable information.
         """
         pass
 

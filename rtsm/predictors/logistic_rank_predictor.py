@@ -66,7 +66,7 @@ class LogisticRankPredictor(Predictor):
             return False
         return True
 
-    def ranking_error(self, usable: Tuple[bool, ...]) -> bool:
+    def get_ranking(self, usable: Tuple[bool, ...]) -> np.ndarray:
         mask = usable + usable
         X = self.Xt[:, :, mask]
         new_R = np.zeros_like(self.Rt)
@@ -80,4 +80,4 @@ class LogisticRankPredictor(Predictor):
                 )
             new_R[h, i, :] = pred
             total_error += error
-        return ranking_error(self.Rt, new_R)
+        return new_R

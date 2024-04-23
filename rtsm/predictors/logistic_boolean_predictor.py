@@ -47,7 +47,7 @@ class LogisticBooleanPredictor(Predictor):
                 return False
         return True
 
-    def ranking_error(self, usable: Tuple[bool, ...]) -> bool:
+    def get_ranking(self, usable: Tuple[bool, ...]) -> np.ndarray:
         X = self.Xt[:, :, usable]
         mask = [not x for x in usable]
         Y = self.Yt[:, :, mask]
@@ -59,7 +59,4 @@ class LogisticBooleanPredictor(Predictor):
                     X[h, :, :], Y[h, :, i].reshape((-1))
                 )
                 cp[:, :, mask][:, :, i] = pred
-        return ranking_error(
-            to_ranking(np.sum(self.instance.performance_matrix, axis=-1)),
-            to_ranking(np.sum(cp, axis=-1)),
-        )
+        return (to_ranking(np.sum(cp, axis=-1)),)

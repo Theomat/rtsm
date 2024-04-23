@@ -87,7 +87,9 @@ if __name__ == "__main__":
         f"ranking error without prediction: {F.GREEN}{ranking_error(R, sR):.2%}{F.RESET}"
     )
     start = time.perf_counter()
-    error = predictor.ranking_error([x in one_sol for x in instance.tests])
+    error = ranking_error(
+        R, predictor.get_ranking([x in one_sol for x in instance.tests])
+    )
     duration = time.perf_counter() - start
     print(
         f"ranking error with prediction ({F.LIGHTYELLOW_EX}{duration:.2f}{F.RESET}s): {F.GREEN}{error:.2%}{F.RESET}"
