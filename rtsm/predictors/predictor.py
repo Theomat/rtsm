@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from typing import Tuple
 
 import numpy as np
@@ -22,6 +23,39 @@ def ranking_error(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
     num = np.max(np.sum(target_ranks != pred_ranks, axis=(1, 2)))
     n = target_ranks.shape[1]
     return num / (np.prod(target_ranks.shape[1:]) - n)
+
+
+def to_ranks(ranking_matrix: np.ndarray) -> np.ndarray:
+    """
+    Return a matrix with ranks of each variant as integers.
+    """
+    p = ranking_matrix.shape[0]
+    n = ranking_matrix.shape[1]
+    ranks = np.zeros((p, n))
+    for h in range(p):
+        dico = defaultdict(list)
+        for i in range(n):
+            pot_rank = n - np.sum(ranking_matrix[h, i])
+            dico[pot_rank].append(i)
+
+        current_rank = 0
+        for i in range(n + 1):
+            candidates = dico[i]
+            if len(candidates) >= 1:
+                if len(candidates) > 1:
+                    ordered = []
+                    for candidate in candidates:
+                        ordered.append(
+                            (np.sum(ranking_matrix[h, candidates]), candidate)
+                        )
+                    new_rank = sorted(ordered, reverse=True)
+                    for _, el in new_rank:
+                        ranks[h, el] = current_rank
+                        current_rank += 1
+                else:
+                    ranks[h, candidates[0]] = current_rank
+                    current_rank += 1
+    return ranks
 
 
 class Predictor(ABC):
