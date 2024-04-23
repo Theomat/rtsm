@@ -175,10 +175,11 @@ if __name__ == "__main__":
     # Solve
     current_solution_size = sum(instance.warm_start())
     progress = True
+    size = 20
     solutions = set()
     while progress:
         progress = False
-        solver.splits = current_solution_size // 20
+        solver.splits = current_solution_size // size
         solutions = solver.solve(
             instance,
             predictor_builder,
@@ -195,7 +196,7 @@ if __name__ == "__main__":
             progress = True
             instance.set_start(one_sol)
             current_solution_size = new_best
-            if new_best <= 19:
+            if new_best // size <= 1:
                 if new_best == 1:
                     break
                 solver = base_solver
