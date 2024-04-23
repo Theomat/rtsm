@@ -196,6 +196,8 @@ if __name__ == "__main__":
             progress = True
             instance.set_start(one_sol)
             current_solution_size = new_best
+            if new_best <= 19:
+                solver = base_solver
         else:
             break
     atexit.unregister(save_result_pre_emptively)
