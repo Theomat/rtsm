@@ -10,10 +10,14 @@ from sklearn.linear_model import LinearRegression
 
 def __learn_linear_model__(
     A: np.ndarray, y: np.ndarray, positive: bool
-) -> Tuple[LinearRegression, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     model = LinearRegression(positive=positive)
-    model.fit(A, y)
-    return model, model.predict(A)
+    try:
+        model.fit(A, y)
+    except RuntimeError as e:
+        # Max iterations reached
+        return np.zeros((A.shape[1],)), np.median(y), np.median(y)
+    return model.coef_, model.intercept_, model.predict(A)
 
 
 class LinearPrediction(Prediction):
@@ -82,7 +86,7 @@ class LinearRegressionPredictor(Predictor):
             for i in range(Y.shape[-1]):
                 D[h, :] += __learn_linear_model__(
                     X[h, :, :], Y[h, :, i].reshape((-1)), self.positive
-                )[1]
+                )[-1]
         return to_ranking(D)
 
     def export_prediction(self, usable: Tuple[bool]) -> LinearPrediction:
@@ -90,18 +94,18 @@ class LinearRegressionPredictor(Predictor):
         X = self.Xt[:, :, usable]
         Y = self.Yt[:, :, [not x for x in usable]]
         coeffs = np.zeros((X.shape[0], X.shape[-1], Y.shape[-1]))
-        intercept = np.zeros((X.shape[0], Y.shape[-1]))
+        intercepts = np.zeros((X.shape[0], Y.shape[-1]))
         for h in range(X.shape[0]):
             for i in range(Y.shape[-1]):
-                model = __learn_linear_model__(
+                coeff, intercept, _ = __learn_linear_model__(
                     X[h, :, :], Y[h, :, i].reshape((-1)), self.positive
-                )[0]
-                coeffs[h, :, i] = model.coef_
-                intercept[h, i] = model.intercept_
+                )
+                coeffs[h, :, i] = coeff
+                intercepts[h, i] = intercept
 
         return LinearPrediction(
             self.instance.get_tests(usable),
             [t for t, b in zip(self.instance.tests, usable) if not b],
             coeffs.transpose((0, 2, 1)),
-            intercept,
+            intercepts,
         )
