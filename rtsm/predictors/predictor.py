@@ -58,6 +58,21 @@ def to_ranks(ranking_matrix: np.ndarray) -> np.ndarray:
     return ranks
 
 
+class Prediction(ABC):
+    @abstractmethod
+    def predict(self, information: np.ndarray) -> np.ndarray:
+        """
+        Uses the prediction object to predict.
+        """
+        pass
+
+    def export(self, path: str) -> None:
+        """
+        Export this prediction to the specified file.
+        """
+        raise NotImplementedError()
+
+
 class Predictor(ABC):
     def __init__(self, instance: Instance, **kwargs) -> None:
         self.instance = instance
@@ -83,8 +98,8 @@ class Predictor(ABC):
         """
         pass
 
-    def export_prediction(self, usable: Tuple[bool, ...], path: str) -> None:
+    def export_prediction(self, usable: Tuple[bool, ...]) -> Prediction:
         """
-        Export the prediction for the specified mask to the specified path.
+        Export the prediction for the specified mask.
         """
         raise NotImplementedError()

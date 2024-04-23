@@ -1,8 +1,8 @@
-from typing import Tuple
+from typing import Tuple, List
 import json
 
 from rtsm.instance import Instance
-from rtsm.predictors.predictor import Predictor, to_ranking, ranking_error
+from rtsm.predictors.predictor import Predictor, Prediction, to_ranking, ranking_error
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -14,6 +14,37 @@ def __learn_linear_model__(
     model = LinearRegression(positive=positive)
     model.fit(A, y)
     return model, model.predict(A)
+
+
+class LinearPrediction(Prediction):
+    def __init__(
+        self, inputs: List[str], outputs: List[str], A: np.ndarray, b: np.ndarray
+    ) -> None:
+        self.inputs = inputs
+        self.outputs = outputs
+        self.A = A
+        self.b = b
+
+    def predict(self, information: np.ndarray) -> np.ndarray:
+        p = self.A.shape[0]
+        n = self.A.shape[1]
+        variants = information.shape[1]
+        information = information.transpose((0, 2, 1))
+        out = np.dot(self.A, information).reshape((p, n, variants)).transpose((0, 2, 1))
+        out += self.b
+        return out
+
+    def export(self, path: str) -> None:
+        out = {
+            "type": "linear",
+            "input": self.inputs,
+            "output": self.outputs,
+            "performances": self.instance.performances,
+            "coefficients": self.A.tolist(),
+            "translation": self.b.tolist(),
+        }
+        with open(path, "w") as fd:
+            json.dump(out, fd)
 
 
 class LinearRegressionPredictor(Predictor):
@@ -54,15 +85,8 @@ class LinearRegressionPredictor(Predictor):
                 )[1]
         return to_ranking(D)
 
-    def export_prediction(self, usable: Tuple[bool], path: str) -> None:
-        out = {
-            "type": self.get_name(),
-            "input": self.instance.get_tests(usable),
-            "output": [t for t, b in zip(self.instance.tests, usable) if not b],
-            "performances": self.instance.performances,
-            "coefficients": [],
-            "translation": [],
-        }
+    def export_prediction(self, usable: Tuple[bool]) -> LinearPrediction:
+
         X = self.Xt[:, :, usable]
         Y = self.Yt[:, :, [not x for x in usable]]
         coeffs = np.zeros((X.shape[0], X.shape[-1], Y.shape[-1]))
@@ -74,7 +98,10 @@ class LinearRegressionPredictor(Predictor):
                 )[0]
                 coeffs[h, :, i] = model.coef_
                 intercept[h, i] = model.intercept_
-        out["coefficients"] = coeffs.transpose((0, 2, 1)).tolist()
-        out["translation"] = intercept.tolist()
-        with open(path, "w") as fd:
-            json.dump(out, fd)
+
+        return LinearPrediction(
+            self.instance.get_tests(usable),
+            [t for t, b in zip(self.instance.tests, usable) if not b],
+            coeffs.transpose((0, 2, 1)),
+            intercept,
+        )

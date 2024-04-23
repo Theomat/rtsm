@@ -74,5 +74,7 @@ if __name__ == "__main__":
     predictor: Predictor = predictors[args.predictor](instance)
     print(f"prediction model: {F.CYAN}{predictor.get_name()}{F.RESET}")
 
-    predictor.export_prediction([x in one_sol for x in instance.tests], args.output)
+    predictor.export_prediction([x in one_sol for x in instance.tests]).export(
+        args.output
+    )
     print(f"saved to: {F.CYAN}{args.output}{F.RESET}")
