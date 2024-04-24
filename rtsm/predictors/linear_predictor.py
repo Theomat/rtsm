@@ -43,7 +43,6 @@ class LinearPrediction(Prediction):
             "type": "linear",
             "input": self.inputs,
             "output": self.outputs,
-            "performances": self.instance.performances,
             "coefficients": self.A.tolist(),
             "translation": self.b.tolist(),
         }
