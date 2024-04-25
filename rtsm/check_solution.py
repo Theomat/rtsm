@@ -4,6 +4,27 @@ if __name__ == "__main__":
     import os
     import json
     import time
+    from typing import Tuple
+
+    from scipy.stats import spearmanr, permutation_test
+    import numpy as np
+
+    def spearman_data(x: np.ndarray, y: np.ndarray) -> Tuple[float, float]:
+        rs = spearmanr(x, y)
+        dof = len(x) - 2
+        if x.shape[0] < 500:
+
+            def statistic(z):
+                rz = spearmanr(z, y).statistic
+                transformed = rz * np.sqrt(dof / ((rz + 1.0) * (1.0 - rz)))
+                return transformed
+
+            ref = permutation_test(
+                (x,), statistic, alternative="greater", permutation_type="pairings"
+            )
+            return rs.statistic, ref.pvalue
+        else:
+            return rs.statistic, rs.pvalue
 
     import numpy as np
     from colorama import Fore as F
@@ -85,11 +106,13 @@ if __name__ == "__main__":
     print(f"\tranking error: {F.GREEN}{ranking_error(R, sR):.2%}{F.RESET}")
 
     def spearman_to_str(rankA, rankB):
-        r_s = 1 - 6 * np.sum(np.square(rankA - rankB), axis=1) / ((n * n - 1) * n)
-        return " ".join(
-            f"{perf}:{F.GREEN}{score:.3f}{F.RESET}"
-            for perf, score in zip(instance.performances, r_s)
-        )
+        out = []
+        for h, perf in zip(range(rankA.shape[0]), instance.performances):
+            s, pval = spearman_data(rankA[h], rankB[h])
+            out.append(
+                f"{perf}:{F.GREEN}{s:.3f}{F.RESET} p-value:{F.GREEN}{pval:.3f}{F.RESET}"
+            )
+        return " ".join(out)
 
     spearman_desc = spearman_to_str(ranks_original, ranks_no_pred)
     print(f"\tspearman: {spearman_desc}")
