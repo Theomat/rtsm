@@ -59,4 +59,4 @@ class LogisticBooleanPredictor(Predictor):
                     X[h, :, :], Y[h, :, i].reshape((-1))
                 )
                 cp[:, :, mask][:, :, i] = pred
-        return (to_ranking(np.sum(cp, axis=-1)),)
+        return to_ranking(np.sum(cp, axis=-1))
