@@ -16,11 +16,17 @@ if __name__ == "__main__":
 
             def statistic(z):
                 rz = spearmanr(z, y).statistic
+                if abs(rz) >= 1:
+                    return rz
                 transformed = rz * np.sqrt(dof / ((rz + 1.0) * (1.0 - rz)))
                 return transformed
 
             ref = permutation_test(
-                (x,), statistic, alternative="greater", permutation_type="pairings"
+                (x,),
+                statistic,
+                alternative="greater",
+                permutation_type="pairings",
+                random_state=1,
             )
             return rs.statistic, ref.pvalue
         else:
