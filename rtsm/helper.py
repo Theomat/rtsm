@@ -61,5 +61,10 @@ def get_predictors() -> Dict[str, Callable[[Instance], Predictor]]:
 
 
 def get_solvers() -> Dict[str, Solver]:
-    __solver_list__: List[Solver] = [BisectSolver(), RandomSamplingSolver()]
+    __solver_list__: List[Solver] = [
+        BisectSolver(True),
+        BisectSolver(False),
+        RandomSamplingSolver(True),
+        RandomSamplingSolver(False),
+    ]
     return {solver.get_name(): solver for solver in __solver_list__}

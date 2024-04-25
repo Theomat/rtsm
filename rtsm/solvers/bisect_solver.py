@@ -132,6 +132,7 @@ def __new_sol__(
     solutions: Set[Tuple[bool, ...]],
     improvement_queue: List[Set[Tuple[bool, ...]]],
     pbar: ProgressBar,
+    try_improve: bool,
 ):
     score = sum(sol)
     if score < current_best:
@@ -140,8 +141,9 @@ def __new_sol__(
         solutions.add(sol)
         return score
     elif score == current_best and sol not in solutions:
-        for x in solutions:
-            improvement_queue.append({x, sol})
+        if try_improve:
+            for x in solutions:
+                improvement_queue.append({x, sol})
         solutions.add(sol)
     return current_best
 
@@ -152,8 +154,13 @@ class BisectSolver(Solver):
 
     """
 
+    def __init__(self, try_improve: bool = False) -> None:
+        self.try_improve = try_improve
+
     def get_name(self) -> str:
-        return "bisect"
+        if self.try_improve:
+            return "bs+sbs"
+        return "bs"
 
     def solve(
         self,
@@ -238,6 +245,7 @@ class BisectSolver(Solver):
                         self.best_sol,
                         improvement_queue,
                         pbar,
+                        self.try_improve,
                     )
                     pbar.update(1)
             pool.shutdown()
@@ -259,6 +267,7 @@ class BisectSolver(Solver):
                     self.best_sol,
                     improvement_queue,
                     pbar,
+                    self.try_improve,
                 )
                 pbar.update(1)
                 if initial_best <= best_possible:
