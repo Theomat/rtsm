@@ -70,6 +70,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument("-q", "--quiet", action="store_true")
+    parser.add_argument("--no-autosave", action="store_true")
 
     parser.add_argument(
         "-p",
@@ -90,6 +91,7 @@ if __name__ == "__main__":
 
     verbose: bool = not args.quiet
     swap: bool = args.swap
+    no_autosave: bool = args.no_autosave
     procs: int = args.procs
 
     initial_solution: str = args.start or ""
@@ -170,7 +172,8 @@ if __name__ == "__main__":
             )
         save(sols)
 
-    atexit.register(save_result_pre_emptively)
+    if not no_autosave:
+        atexit.register(save_result_pre_emptively)
 
     # Solve
     current_solution_size = sum(instance.warm_start())
@@ -203,7 +206,8 @@ if __name__ == "__main__":
 
         else:
             break
-    atexit.unregister(save_result_pre_emptively)
+    if not no_autosave:
+        atexit.unregister(save_result_pre_emptively)
     if verbose:
         if len(solutions) == 0:
             print(f"found {F.RED}no solution{F.RESET}")
