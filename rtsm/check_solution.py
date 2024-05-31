@@ -140,7 +140,7 @@ if __name__ == "__main__":
         print()
         full = try_load_instance(args.full, data_loaders, swap)
         print(
-            f"loaded full {F.CYAN}{len(instance.variants)}{F.RESET} variants and {F.CYAN}{len(instance.tests)}{F.RESET} tests"
+            f"loaded full {F.CYAN}{len(full.variants)}{F.RESET} variants and {F.CYAN}{len(full.tests)}{F.RESET} tests"
         )
         R = to_ranking(np.sum(full.performance_matrix, axis=-1))
         ranks_original = to_ranks(R)
