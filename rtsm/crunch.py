@@ -6,7 +6,9 @@ if __name__ == "__main__":
     from typing import Callable
     import atexit
 
-    from colorama import Fore as F
+    from rtsm.utils.color_helper import get_color_helper
+
+    F = get_color_helper()
 
     from rtsm.instance import Instance
     from rtsm.solution import Solution

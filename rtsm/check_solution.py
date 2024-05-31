@@ -33,8 +33,9 @@ if __name__ == "__main__":
             return rs.statistic, rs.pvalue
 
     import numpy as np
-    from colorama import Fore as F
+    from rtsm.utils.color_helper import get_color_helper
 
+    F = get_color_helper()
     from rtsm.predictors.predictor import Predictor, to_ranking, ranking_error, to_ranks
 
     from rtsm.helper import get_predictors, get_data_loaders, try_load_instance
