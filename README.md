@@ -23,7 +23,9 @@ See the associated paper for the technical details.
   - [Check your solution](#check-your-solution)
   - [Multiprocessing](#multiprocessing)
   - [Start from an existing solution](#start-from-an-existing-solution)
-  - [Divide and Conquer](#divide-and-conquer)
+  - [Multi performance metrics](#multi-performance-metrics)
+- [Input Format](#input-format)
+  - [CSV](#csv)
 - [Citing](#citing)
 
 <!-- tocstop -->
@@ -42,6 +44,8 @@ Here is how you can start by simply running the following command:
 ```bash
 python -m rtsm.crunch ./examples/humaneval_pass200.csv
 ```
+
+Note that you can also use the same command without the ``crunch`` but the ``crunch`` tries to optimise the solution and find best parameters to get the best solution as fast as possible, we recommend using the ``crunch`` version unless you know what you are doing.
 
 ### Check your solution
 
@@ -77,18 +81,6 @@ Now, I would like to start from a solution that I found to see if I can find a b
 python -m rtsm.crunch ./examples/SAT20-MAIN.csv  -p 8 --start my_solution.json
 ```
 
-### Divide and Conquer
-
-The ``x264_etime.csv`` contains 1397 tests, that's quite a lot, it already took minutes for one sample on 400 tests so it's likely to be very slow.
-Well, we can actually use divide and conquer, it's easy:
-
-```bash
-python -m rtsm.crunch ./examples/x264_etime.csv  -p 8 --splits 14
-```
-
-This will split the 1397 test into 14 packets of approximately the same size and then do merging in order to find a solution.
-This is much faster than other approaches, however we are making more greedy decisions.
-
 ### Export your prediction model
 
 Let us say now that we have a solution that we got with the ``linear+`` predictor model and we would like to export the prediction model to use it elsewhere then we can do:
@@ -96,6 +88,22 @@ Let us say now that we have a solution that we got with the ``linear+`` predicto
 ```bash
 python -m rtsm.export ./examples/x264_etime.csv my_solution.json --predictor "linear+" -o dst.json
 ```
+
+### Multi performance metrics
+
+What if you wanted to minimise the test set for two performance metrics? Well if both performance metrics are in your input file, that will be done automatically, you have nothing to do!
+
+For multiple performance metrics, the accuracy parameter is such that the worse accuracy among all performance metrics is greater than this accuracy threshold.
+
+## Input Format
+
+### CSV
+
+There are two required columns in your CSV, one entitled ``variant`` and one entitled ``test``, every other column is considered as a different performance metric.
+Both columns ``variant`` and ``test`` are considered as ``strings`` wherease all other columns are considered as ``float``.
+
+See ``examples/x264_kbs_etime.csv`` for an example file that contains two different performance metrics.
+
 
 ## Citing
 
