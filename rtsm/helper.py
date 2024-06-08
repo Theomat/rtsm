@@ -9,6 +9,7 @@ from rtsm.data_loaders.data_loader import DataLoader
 from rtsm.instance import Instance
 
 from rtsm.predictors.predictor import Predictor
+from rtsm.predictors.no_predictor import NoPredictor
 from rtsm.predictors.logistic_boolean_predictor import LogisticBooleanPredictor
 from rtsm.predictors.logistic_rank_predictor import LogisticRankPredictor
 from rtsm.predictors.linear_predictor import LinearRegressionPredictor
@@ -51,6 +52,7 @@ def get_predictors() -> Dict[str, Callable[[Instance], Predictor]]:
 
     return {
         "auto": adaptative_predictor,
+        "none": NoPredictor,
         "logistic-bool": LogisticBooleanPredictor,
         "logistic-rank": LogisticRankPredictor,
         "linear": LinearRegressionPredictor,
