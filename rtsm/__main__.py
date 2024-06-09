@@ -3,7 +3,6 @@ if __name__ == "__main__":
     import sys
     import os
     import json
-    from typing import Callable
     import atexit
 
     from rtsm.utils.color_helper import get_color_helper
@@ -157,9 +156,10 @@ if __name__ == "__main__":
 
     # Build predictor
     accuracy: float = args.accuracy
-    predictor_builder: Callable[[Instance], Predictor] = lambda instance: predictors[
-        args.predictor
-    ](instance, accuracy=accuracy)
+
+    def predictor_builder(instance: Instance) -> Predictor:
+        return predictors[args.predictor](instance, accuracy=accuracy)
+
     if verbose:
         print(
             f"prediction model: {F.CYAN}{predictor_builder(instance).get_name()}{F.RESET}"

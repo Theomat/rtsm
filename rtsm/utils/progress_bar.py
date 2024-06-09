@@ -1,8 +1,9 @@
 from typing import Optional
 from rtsm.utils.color_helper import get_color_helper
 
-F = get_color_helper()
 import tqdm
+
+F = get_color_helper()
 
 
 class ProgressBar:

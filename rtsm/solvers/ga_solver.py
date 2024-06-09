@@ -1,14 +1,16 @@
 from typing import Callable, Optional, Set, Tuple, Union
 
 import numpy as np
-from colorama import Fore as F
 
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor, ranking_error, to_ranking
 from rtsm.solution import Solution
 from rtsm.solvers.solver import Solver
+from rtsm.utils.color_helper import get_color_helper
 
 import pygad
+
+F = get_color_helper()
 
 
 def __sol_conv__(mapping, sol: np.ndarray) -> Tuple[bool, ...]:
@@ -50,6 +52,8 @@ def __generation_callback__(instance: pygad.GA):
         instance.best_cost[0],
         instance.best_sol,
     )
+    # instance.plot_fitness()
+    # instance.plot_new_solution_rate()
     if instance.verbose:
         cost = instance.best_cost[0]
         print(
@@ -119,6 +123,7 @@ class GASolver(Solver):
             mutation_by_replacement=True,
             parallel_processing=None if nprocs <= 1 else ["process", nprocs],
             random_seed=seed,
+            save_solutions=False,
         )
         self.ga_instance = ga_instance
         ga_instance.predictor = predictor

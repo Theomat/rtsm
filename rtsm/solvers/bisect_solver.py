@@ -2,14 +2,15 @@ from concurrent.futures import ProcessPoolExecutor, wait
 from typing import Callable, Generator, List, Optional, Set, Tuple, Union
 
 import numpy as np
-from colorama import Fore as F
-
 
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
 from rtsm.solution import Solution
 from rtsm.solvers.solver import Solver
+from rtsm.utils.color_helper import get_color_helper
 from rtsm.utils.progress_bar import ProgressBar
+
+F = get_color_helper()
 
 
 def __split__(

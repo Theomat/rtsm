@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Set, Union
 
-from colorama import Fore as F
-
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
 from rtsm.solution import Solution
+from rtsm.utils.color_helper import get_color_helper
+
+F = get_color_helper()
 
 
 class Solver(ABC):

@@ -2,30 +2,15 @@ from concurrent.futures import ProcessPoolExecutor, wait
 from typing import Callable, List, Optional, Set, Tuple, Union
 
 import numpy as np
-from colorama import Fore as F
 
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
 from rtsm.solution import Solution
 from rtsm.solvers.solver import Solver
+from rtsm.utils.color_helper import get_color_helper
 from rtsm.utils.progress_bar import ProgressBar
 
-
-def __new_sol__(
-    sol: Tuple[bool, ...],
-    current_best: int,
-    solutions: Set[Tuple[bool, ...]],
-    pbar: ProgressBar,
-):
-    score = sum(sol)
-    if score < current_best:
-        pbar.set_best(score, score / len(sol))
-        solutions.clear()
-        solutions.add(sol)
-        return score
-    elif score == current_best and sol not in solutions:
-        solutions.add(sol)
-    return current_best
+F = get_color_helper()
 
 
 def __improve_upon__(
