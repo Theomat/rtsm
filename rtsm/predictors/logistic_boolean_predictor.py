@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from rtsm.instance import Instance
-from rtsm.predictors.predictor import Predictor, ranking_error, to_ranking
+from rtsm.predictors.predictor import Predictor, to_ranking
 
 import numpy as np
 from sklearn.linear_model import LogisticRegression

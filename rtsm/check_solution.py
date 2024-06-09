@@ -66,7 +66,7 @@ if __name__ == "__main__":
         "--predictor",
         choices=list(predictors.keys()),
         default=list(predictors.keys())[0],
-        help=f"prediction model to use",
+        help="prediction model to use",
     )
 
     args = parser.parse_args()

@@ -14,7 +14,7 @@ def __learn_linear_model__(
     model = LinearRegression(positive=positive)
     try:
         model.fit(A, y)
-    except RuntimeError as e:
+    except RuntimeError:
         # Max iterations reached
         return np.zeros((A.shape[1],)), np.median(y), np.median(y)
     return model.coef_, model.intercept_, model.predict(A)

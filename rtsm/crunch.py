@@ -40,13 +40,13 @@ if __name__ == "__main__":
         "--predictor",
         choices=list(predictors.keys()),
         default=list(predictors.keys())[0],
-        help=f"prediction model to use",
+        help="prediction model to use",
     )
     group.add_argument(
         "--solver",
         choices=list(solvers.keys()),
         default=list(solvers.keys())[0],
-        help=f"solver to use",
+        help="solver to use",
     )
     group.add_argument("--swap", action="store_true", help="swap variants and tests")
     group.add_argument(

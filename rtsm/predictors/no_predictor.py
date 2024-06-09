@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Tuple
 
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor, to_ranking, ranking_error
