@@ -165,6 +165,7 @@ if __name__ == "__main__":
             json.dump(Solution.to_json(sols), fd)
 
     solver = FusionSolver(base_solver.__class__, -1)
+
     # Anytime solving
     def save_result_pre_emptively():
         sols = solver.early_exit()

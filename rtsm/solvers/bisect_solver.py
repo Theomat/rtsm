@@ -114,9 +114,7 @@ def __bisect__(
 
 
 def __improve_upon__(
-    sol_set: Set[
-        Tuple[bool, ...],
-    ],
+    sol_set: Set[Tuple[bool, ...],],
     seed: Union[int, np.random.Generator],
     predictor: Predictor,
 ) -> Tuple[bool, ...]:

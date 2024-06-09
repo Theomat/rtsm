@@ -60,7 +60,7 @@ class LinearRegressionPredictor(Predictor):
         instance: Instance,
         accuracy: float = 1.0,
         positive: bool = False,
-        **kwargs
+        **kwargs,
     ) -> None:
         self.instance = instance
         self.Xt = instance.performance_matrix.copy()
@@ -89,7 +89,6 @@ class LinearRegressionPredictor(Predictor):
         return to_ranking(D)
 
     def export_prediction(self, usable: Tuple[bool]) -> LinearPrediction:
-
         X = self.Xt[:, :, usable]
         Y = self.Yt[:, :, [not x for x in usable]]
         coeffs = np.zeros((X.shape[0], X.shape[-1], Y.shape[-1]))

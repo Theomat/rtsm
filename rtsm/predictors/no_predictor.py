@@ -11,12 +11,7 @@ class NoPredictor(Predictor):
     A predictor that does not predict anything.
     """
 
-    def __init__(
-        self,
-        instance: Instance,
-        accuracy: float = 1.0,
-        **kwargs
-    ) -> None:
+    def __init__(self, instance: Instance, accuracy: float = 1.0, **kwargs) -> None:
         self.instance = instance
         self.Xt = instance.performance_matrix.copy()
         self.Rt = to_ranking(np.sum(self.Xt, axis=-1))

@@ -29,9 +29,7 @@ def __new_sol__(
 
 
 def __improve_upon__(
-    sol_set: Set[
-        Tuple[bool, ...],
-    ],
+    sol_set: Set[Tuple[bool, ...],],
     seed: Union[int, np.random.Generator],
     predictor: Predictor,
     max_samples: int,
