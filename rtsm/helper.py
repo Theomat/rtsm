@@ -69,4 +69,11 @@ def get_solvers() -> Dict[str, Solver]:
         RandomSamplingSolver(True),
         RandomSamplingSolver(False),
     ]
+    try:
+        from rtsm.solvers.ga_solver import GASolver
+
+        __solver_list__.append(GASolver())
+    except:
+        pass
+
     return {solver.get_name(): solver for solver in __solver_list__}

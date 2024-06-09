@@ -41,13 +41,13 @@ if __name__ == "__main__":
         "--predictor",
         choices=list(predictors.keys()),
         default=list(predictors.keys())[0],
-        help=f"prediction model to use",
+        help="prediction model to use",
     )
     group.add_argument(
         "--solver",
         choices=list(solvers.keys()),
         default=list(solvers.keys())[0],
-        help=f"solver to use",
+        help="solver to use",
     )
     group.add_argument("--swap", action="store_true", help="swap variants and tests")
     group.add_argument(
@@ -62,12 +62,12 @@ if __name__ == "__main__":
         help="start from an existing solution file in order to improve upon it",
     )
 
-    group = parser.add_argument_group("sampling based solvers (rs, bisect)")
+    group = parser.add_argument_group("sampling based solvers (rs, bisect, ga)")
     group.add_argument(
         "--samples",
         type=positive_int,
         default=10000,
-        help="number of samples",
+        help="number of samples, for ga it is the number of generations",
     )
     group.add_argument(
         "--seed",
