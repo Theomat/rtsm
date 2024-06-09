@@ -101,8 +101,8 @@ class GASolver(Solver):
         mapping = {}
         j = 0
         for i, val in enumerate(init):
-            mapping[i] = j
             if val:
+                mapping[j] = i
                 j += 1
 
         target_ranking = to_ranking(np.sum(instance.performance_matrix, axis=-1))
