@@ -31,30 +31,44 @@ def __new_sol__(
 
 
 def __sample__(
+    current_sol: Optional[Tuple[bool, ...]],
     n: int,
     size: int,
     predictor: Predictor,
     seed: Union[int, np.random.Generator],
     max_samples: int,
 ) -> Tuple[bool, int, Tuple[bool, ...]]:
-    choices = list(range(size))
+    choices = (
+        list(range(size))
+        if current_sol is None
+        else [i for i, v in enumerate(current_sol) if v]
+    )
     rng = np.random.default_rng(seed) if isinstance(seed, int) else seed
+    done = set()
     for used in range(max_samples):
         selected = rng.choice(choices, n, replace=False)
+        key = tuple(selected)
+        if key in done:
+            continue
+        done.add(key)
         current = [i in selected for i in range(size)]
         if predictor.can_predict(current):
             return True, used + 1, tuple(current)
     return False, max_samples, tuple()
 
 
-class RandomSolutionSolver(Solver):
+class RandomImprovementSolver(Solver):
     """
-    A solver that samples random solutions.
+    A solver that samples random improvements.
 
     """
+
+    def __init__(self, local: bool = False) -> None:
+        super().__init__()
+        self.local = local
 
     def get_name(self) -> str:
-        return "rs"
+        return "ri" + ("-local" if self.local else "")
 
     def solve(
         self,
@@ -81,13 +95,13 @@ class RandomSolutionSolver(Solver):
         init = instance.warm_start()
         self.best_sol = {init}
         best_cost = sum(init)
-        initial_cost = best_cost
         if verbose:
             print(
                 f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_cost}{F.RESET} ({F.LIGHTCYAN_EX}{best_cost / len(init):.1%}{F.RESET})"
             )
 
         budget = samples
+        current_sol = init if self.local else None
 
         pbar = ProgressBar(total=samples, name=self.get_name(), use_tqdm=use_tqdm)
         if nprocs > 1:
@@ -100,7 +114,8 @@ class RandomSolutionSolver(Solver):
                     futures.append(
                         pool.submit(
                             __sample__,
-                            initial_cost - 1,
+                            current_sol,
+                            best_cost - 1,
                             n,
                             predictor,
                             queued,
@@ -122,12 +137,14 @@ class RandomSolutionSolver(Solver):
                         self.best_sol,
                         pbar,
                     )
+                    current_sol = list(self.best_sol)[0] if self.local else None
             pool.shutdown()
 
         else:
             while budget > 0 and best_cost > 1:
                 has_found, used, out = __sample__(
-                    initial_cost - 1,
+                    current_sol,
+                    best_cost - 1,
                     n,
                     predictor,
                     (seed or 0) + budget,
@@ -143,6 +160,8 @@ class RandomSolutionSolver(Solver):
                     self.best_sol,
                     pbar,
                 )
+                current_sol = list(self.best_sol)[0] if self.local else None
+
         pbar.close()
 
         return self.__get_solutions__()
