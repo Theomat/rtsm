@@ -14,7 +14,7 @@ F = get_color_helper()
 
 
 def __sol_conv__(mapping, sol: np.ndarray) -> Tuple[bool, ...]:
-    return [mapping[i] if val else 0 for i, val in enumerate(sol)]
+    return tuple(mapping[i] if val else 0 for i, val in enumerate(sol))
 
 
 def __new_sol__(
