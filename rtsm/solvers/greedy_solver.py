@@ -65,11 +65,11 @@ class GreedySolver(Solver):
             mini_index = 0
             costs = np.sum(instance.performance_matrix[:, :, allowed], axis=(0, 1))
             j = 0
-            for i, x in enumerate(allowed):
-                j += x
+            for x in allowed:
                 if x and costs[j] < mini:
                     mini = costs[j]
-                    mini_index = i
+                    mini_index = j
+                j += x
             allowed[mini_index] = False
             if predictor.can_predict(allowed):
                 best_cost = __new_sol__(allowed, best_cost, pbar)
