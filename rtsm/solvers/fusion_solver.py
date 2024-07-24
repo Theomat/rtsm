@@ -49,6 +49,9 @@ class SplitManager:
     def has_next(self) -> bool:
         return len(self.queue) > 0
 
+    def smallest_partition(self) -> int:
+        return min(len(p) for p in self.partitions.values())
+
     def is_done(self) -> bool:
         if len(self.queue) == 0:
             self.__update_merge_queue__()
@@ -139,6 +142,89 @@ class SplitManager:
         return {Solution(self.instance, tuple(out))}
 
 
+class SplitChooser:
+    def __init__(
+        self,
+        instance: Instance,
+        splits: int,
+        seed: Optional[int],
+        predictor_builder: Callable[[Instance], Predictor],
+        max_tries: int,
+    ):
+        self.instance = instance
+        self.max_tries = max_tries
+        self.managers = [
+            SplitManager(
+                instance,
+                splits,
+                (i * 17 + seed or 0) * 17 + 31,
+                predictor_builder,
+                max_tries,
+            )
+            for i in range(10)
+        ]
+        self.second_phase = False
+        self.chosen_one = 0
+        self.queue = []
+        for i, m in enumerate(self.managers):
+            self.queue.append((i, m.next_instance()))
+
+    def current_best_score(self) -> int:
+        if self.second_phase:
+            return self.managers[self.chosen_one].current_best_score()
+        return min(m.current_best_score() for m in self.managers)
+
+    def get_solutions(self) -> Set[Solution]:
+        if self.second_phase:
+            return self.managers[self.chosen_one].get_solutions()
+        out = set()
+        for m in self.managers:
+            out |= m.get_solutions()
+        return out
+
+    def has_next(self) -> bool:
+        if self.second_phase:
+            return self.managers[self.chosen_one].has_next()
+        return len(self.queue) > 0
+
+    def is_done(self) -> bool:
+        if self.second_phase:
+            return self.managers[self.chosen_one].is_done()
+        if len(self.queue) == 0:
+            alive = 0
+            for i, m in enumerate(self.managers):
+                if m.smallest_partition() >= 100:
+                    continue
+                alive += 1
+                if not m.is_done() and m.has_next():
+                    self.queue.append((i, m.next_instance()))
+
+            if alive == 0:
+                self.second_phase = True
+                self.chosen_one = 0
+                score = 1e99
+                for i, m in enumerate(self.managers):
+                    if m.current_best_score() < score:
+                        self.chosen_one = i
+                        score = m.current_best_score()
+                # Keep relevant tasks
+                self.queue = [x for x in self.queue if x[0] == self.chosen_one]
+                return self.is_done()
+            return len(self.queue) == 0 
+        return False
+
+    def next_instance(self) -> Tuple[int, Tuple[int, Instance]]:
+        if self.second_phase:
+            if self.queue:
+                return self.queue.pop()
+            return self.chosen_one, self.managers[self.chosen_one].next_instance()
+        return self.queue.pop()
+
+    def feed(self, data: Tuple[int, int, Set[Solution]]) -> bool:
+        manager = self.managers[data[0]]
+        manager.feed(data[1:])
+
+
 class FusionSolver(Solver):
     """
     This is a meta solver, that uses divide and conquer on top of another solver.
@@ -164,7 +250,7 @@ class FusionSolver(Solver):
     ) -> Set[Solution]:
         self.instance = instance
         n = len(instance.tests)
-        self.split_manager = SplitManager(
+        self.split_manager = SplitChooser(
             instance, self.splits, seed, predictor_builder, samples
         )
         if verbose:
@@ -173,7 +259,7 @@ class FusionSolver(Solver):
                 f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_score}{F.RESET} ({F.LIGHTCYAN_EX}{best_score/ len(instance.tests):.1%}{F.RESET})"
             )
         pbar = ProgressBar(
-            total=(self.splits * 2 - 1) * self.split_manager.max_tries,
+            total=(self.splits * 2 - 1) * self.split_manager.max_tries * 10,
             name=self.get_name(),
             use_tqdm=use_tqdm,
         )
@@ -187,11 +273,11 @@ class FusionSolver(Solver):
             futures = []
             while not self.split_manager.is_done():
                 while len(futures) < nprocs and self.split_manager.has_next():
-                    id, sub_instance = self.split_manager.next_instance()
+                    did, (id, sub_instance) = self.split_manager.next_instance()
                     futures.append(
                         pool.submit(
                             __solve__,
-                            id,
+                            (did, id),
                             self.solver_builder(),
                             sub_instance,
                             predictor_builder(sub_instance),
@@ -200,7 +286,8 @@ class FusionSolver(Solver):
                     )
                 done, _ = wait(futures, return_when="FIRST_COMPLETED")
                 for future in done:
-                    accepted = self.split_manager.feed(future.result())
+                    (did, id), out = future.result()
+                    accepted = self.split_manager.feed((did, id, out))
                     futures.remove(future)
                     if accepted:
                         todo = max(0, self.split_manager.max_tries - left_over)
@@ -215,13 +302,13 @@ class FusionSolver(Solver):
         else:
             sub_solver = self.solver_builder()
             while not self.split_manager.is_done():
-                id, sub_instance = self.split_manager.next_instance()
+                did, (id, sub_instance) = self.split_manager.next_instance()
                 out = sub_solver.solve(
                     sub_instance,
                     predictor_builder,
                     **kwargs,
                 )
-                accepted = self.split_manager.feed((id, out))
+                accepted = self.split_manager.feed((did, id, out))
                 if accepted:
                     todo = max(0, self.split_manager.max_tries - left_over)
                     left_over -= self.split_manager.max_tries - todo
