@@ -157,7 +157,7 @@ class SplitChooser:
             SplitManager(
                 instance,
                 splits,
-                (i * 17 + seed or 0) * 17 + 31,
+                (i * 17 + (seed or 0)) * 17 + 31,
                 predictor_builder,
                 max_tries,
             )
