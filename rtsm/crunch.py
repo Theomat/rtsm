@@ -5,9 +5,6 @@ if __name__ == "__main__":
     import json
     import atexit
 
-    from rtsm.utils.color_helper import get_color_helper
-
-    F = get_color_helper()
 
     from rtsm.instance import Instance
     from rtsm.solution import Solution
@@ -21,6 +18,9 @@ if __name__ == "__main__":
     )
 
     from rtsm.utils.argparse_helper import positive_int, bounded_float
+    from rtsm.utils.color_helper import get_color_helper
+
+    F = get_color_helper()
 
     data_loaders, supported_extensions = get_data_loaders()
     predictors = get_predictors()
@@ -199,6 +199,7 @@ if __name__ == "__main__":
         one_sol = list(solutions)[0].tests
         new_best = len(one_sol)
         if new_best < current_solution_size:
+            save(solutions)
             progress = True
             instance.set_start(one_sol)
             current_solution_size = new_best
