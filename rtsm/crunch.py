@@ -5,7 +5,6 @@ if __name__ == "__main__":
     import json
     import atexit
 
-
     from rtsm.instance import Instance
     from rtsm.solution import Solution
     from rtsm.predictors.predictor import Predictor
@@ -193,6 +192,7 @@ if __name__ == "__main__":
             procs,
             verbose=False,
             seed=args.seed,
+            on_progress_callback=save,
         )
         if len(solutions) == 0:
             break

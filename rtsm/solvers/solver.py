@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Set, Union
+from typing import Any, Callable, Optional, Set, Union
 
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
@@ -24,6 +24,7 @@ class Solver(ABC):
         predictor_builder: Union[Callable[[Instance], Predictor], Predictor],
         use_tqdm: bool = False,
         nprocs: int = 1,
+        on_progress_callback: Optional[Callable[[Set[Solution]], None]] = None,
         **kwargs: Any,
     ) -> Set[Solution]:
         """

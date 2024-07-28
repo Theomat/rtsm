@@ -15,7 +15,6 @@ from rtsm.predictors.logistic_rank_predictor import LogisticRankPredictor
 from rtsm.predictors.linear_predictor import LinearRegressionPredictor
 from rtsm.solvers.bisect_solver import BisectSolver
 from rtsm.solvers.greedy_solver import GreedySolver
-from rtsm.solvers.ri_solver import RandomImprovementSolver
 from rtsm.solvers.rs_solver import RandomSolutionSolver
 from rtsm.solvers.solver import Solver
 
@@ -66,11 +65,9 @@ def get_predictors() -> Dict[str, Callable[[Instance], Predictor]]:
 
 def get_solvers() -> Dict[str, Solver]:
     __solver_list__: List[Solver] = [
-        RandomImprovementSolver(False),
-        RandomImprovementSolver(True),
+        BisectSolver(False),
         RandomSolutionSolver(),
         BisectSolver(True),
-        BisectSolver(False),
         GreedySolver(),
     ]
     try:

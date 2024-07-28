@@ -21,11 +21,13 @@ def __new_sol__(
     sol: Tuple[bool, ...],
     current_best: int,
     solutions: Set[Tuple[bool, ...]],
+    on_progress_callback: Optional[Callable[[Set[Solution]], None]] = None,
 ):
     score = sum(sol)
     if score < current_best:
         solutions.clear()
         solutions.add(sol)
+        on_progress_callback(solutions)
         return score
     elif score == current_best and sol not in solutions:
         solutions.add(sol)
@@ -51,6 +53,7 @@ def __generation_callback__(instance: pygad.GA):
         current_sol,
         instance.best_cost[0],
         instance.best_sol,
+        instance.progress_callback,
     )
     # instance.plot_fitness()
     # instance.plot_new_solution_rate()
@@ -79,6 +82,7 @@ class GASolver(Solver):
         samples: int = 10000,
         seed: Optional[int] = None,
         verbose: bool = False,
+        on_progress_callback: Optional[Callable[[Set[Solution]], None]] = None,
         **kwargs,
     ) -> Set[Solution]:
         """
@@ -126,6 +130,7 @@ class GASolver(Solver):
             save_solutions=False,
         )
         self.ga_instance = ga_instance
+        ga_instance.progress_callback = on_progress_callback
         ga_instance.predictor = predictor
         ga_instance.target_ranking = target_ranking
         ga_instance.args = (n, acc)

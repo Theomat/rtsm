@@ -210,7 +210,7 @@ class SplitChooser:
                 # Keep relevant tasks
                 self.queue = [x for x in self.queue if x[0] == self.chosen_one]
                 return self.is_done()
-            return len(self.queue) == 0 
+            return len(self.queue) == 0
         return False
 
     def next_instance(self) -> Tuple[int, Tuple[int, Instance]]:
@@ -246,6 +246,7 @@ class FusionSolver(Solver):
         seed: Optional[int] = None,
         samples: int = 20,
         verbose: bool = False,
+        on_progress_callback: Optional[Callable[[Set[Solution]], None]] = None,
         **kwargs: Any,
     ) -> Set[Solution]:
         self.instance = instance
@@ -292,6 +293,8 @@ class FusionSolver(Solver):
                     if accepted:
                         todo = max(0, self.split_manager.max_tries - left_over)
                         left_over -= self.split_manager.max_tries - todo
+                        if on_progress_callback is not None:
+                            on_progress_callback(self.split_manager.get_solutions())
                         pbar.update(todo)
                     else:
                         pbar.update(1)
@@ -313,6 +316,8 @@ class FusionSolver(Solver):
                     todo = max(0, self.split_manager.max_tries - left_over)
                     left_over -= self.split_manager.max_tries - todo
                     pbar.update(todo)
+                    if on_progress_callback is not None:
+                        on_progress_callback(self.split_manager.get_solutions())
                 else:
                     pbar.update(1)
                     left_over += 1

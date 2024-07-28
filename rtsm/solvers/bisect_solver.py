@@ -132,12 +132,15 @@ def __new_sol__(
     improvement_queue: List[Set[Tuple[bool, ...]]],
     pbar: ProgressBar,
     try_improve: bool,
+    on_progress_callback: Optional[Callable[[Set[Solution]], None]] = None,
 ):
     score = sum(sol)
     if score < current_best:
         pbar.set_best(score, score / len(sol))
         solutions.clear()
         solutions.add(sol)
+        if on_progress_callback is not None:
+            on_progress_callback(solutions)
         return score
     elif score == current_best and sol not in solutions:
         if try_improve:
@@ -170,6 +173,7 @@ class BisectSolver(Solver):
         verbose: bool = False,
         samples: int = 10000,
         seed: Optional[int] = None,
+        on_progress_callback: Optional[Callable[[Set[Solution]], None]] = None,
         **kwargs,
     ) -> Set[Solution]:
         """
@@ -245,6 +249,7 @@ class BisectSolver(Solver):
                         improvement_queue,
                         pbar,
                         self.try_improve,
+                        on_progress_callback,
                     )
                     pbar.update(1)
             pool.shutdown()
@@ -267,6 +272,7 @@ class BisectSolver(Solver):
                     improvement_queue,
                     pbar,
                     self.try_improve,
+                    on_progress_callback,
                 )
                 pbar.update(1)
                 if initial_best <= best_possible:

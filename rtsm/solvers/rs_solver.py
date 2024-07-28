@@ -18,12 +18,15 @@ def __new_sol__(
     current_best: int,
     solutions: Set[Tuple[bool, ...]],
     pbar: ProgressBar,
+    on_progress_callback: Optional[Callable[[Set[Solution]], None]] = None,
 ):
     score = sum(sol)
     if score < current_best:
         pbar.set_best(score, score / len(sol))
         solutions.clear()
         solutions.add(sol)
+        if on_progress_callback is not None:
+            on_progress_callback(solutions)
         return score
     elif score == current_best and sol not in solutions:
         solutions.add(sol)
@@ -65,6 +68,7 @@ class RandomSolutionSolver(Solver):
         samples: int = 10000,
         seed: Optional[int] = None,
         verbose: bool = False,
+        on_progress_callback: Optional[Callable[[Set[Solution]], None]] = None,
         **kwargs,
     ) -> Set[Solution]:
         """
@@ -117,10 +121,7 @@ class RandomSolutionSolver(Solver):
                     if not has_found:
                         continue
                     best_cost = __new_sol__(
-                        out,
-                        best_cost,
-                        self.best_sol,
-                        pbar,
+                        out, best_cost, self.best_sol, pbar, on_progress_callback
                     )
             pool.shutdown()
 
@@ -138,10 +139,7 @@ class RandomSolutionSolver(Solver):
                 if not has_found:
                     continue
                 best_cost = __new_sol__(
-                    out,
-                    best_cost,
-                    self.best_sol,
-                    pbar,
+                    out, best_cost, self.best_sol, pbar, on_progress_callback
                 )
         pbar.close()
 
