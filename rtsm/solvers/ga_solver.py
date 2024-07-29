@@ -27,7 +27,8 @@ def __new_sol__(
     if score < current_best:
         solutions.clear()
         solutions.add(sol)
-        on_progress_callback(solutions)
+        if on_progress_callback is not None:
+            on_progress_callback(solutions)
         return score
     elif score == current_best and sol not in solutions:
         solutions.add(sol)
