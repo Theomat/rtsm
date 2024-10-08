@@ -82,8 +82,9 @@ class LinearRegressionPredictor(Predictor):
         return "linear"
 
     def can_predict(self, usable: Tuple[bool, ...]) -> bool:
-        X = self.Xt[:, :, usable]
-        Y = self.Yt[:, :, [not x for x in usable]]
+        mask = np.asarray(usable)
+        X = self.Xt[:, :, mask]
+        Y = self.Yt[:, :, ~mask]
         for h in range(X.shape[0]):
             D = np.add.reduce(self.Xt[h, :, :], axis=-1)
             for i in range(Y.shape[-1]):
@@ -95,8 +96,9 @@ class LinearRegressionPredictor(Predictor):
         return True
 
     def get_ranking(self, usable: Tuple[bool, ...]) -> np.ndarray:
-        X = self.Xt[:, :, usable]
-        Y = self.Yt[:, :, [not x for x in usable]]
+        mask = np.asarray(usable)
+        X = self.Xt[:, :, mask]
+        Y = self.Yt[:, :, ~mask]
         D = np.add.reduce(self.Xt, axis=-1)
         for h in range(X.shape[0]):
             for i in range(Y.shape[-1]):
@@ -106,8 +108,9 @@ class LinearRegressionPredictor(Predictor):
         return to_ranking(D)
 
     def export_prediction(self, usable: Tuple[bool]) -> LinearPrediction:
-        X = self.Xt[:, :, usable]
-        Y = self.Yt[:, :, [not x for x in usable]]
+        mask = np.asarray(usable)
+        X = self.Xt[:, :, mask]
+        Y = self.Yt[:, :, ~mask]
         coeffs = np.zeros((X.shape[0], X.shape[-1], Y.shape[-1]))
         intercepts = np.zeros((X.shape[0], Y.shape[-1]))
         for h in range(X.shape[0]):

@@ -35,8 +35,9 @@ class LogisticBooleanPredictor(Predictor):
         return "logistic-boolean"
 
     def can_predict(self, usable: Tuple[bool, ...]) -> bool:
-        X = self.Xt[:, :, usable]
-        Y = self.Yt[:, :, [not x for x in usable]]
+        mask = np.asarray(usable)
+        X = self.Xt[:, :, mask]
+        Y = self.Yt[:, :, ~mask]
 
         for h in range(X.shape[0]):
             for i in range(Y.shape[-1]):
@@ -48,9 +49,9 @@ class LogisticBooleanPredictor(Predictor):
         return True
 
     def get_ranking(self, usable: Tuple[bool, ...]) -> np.ndarray:
-        X = self.Xt[:, :, usable]
-        mask = [not x for x in usable]
-        Y = self.Yt[:, :, mask]
+        mask = np.asarray(usable)
+        X = self.Xt[:, :, mask]
+        Y = self.Yt[:, :, ~mask]
         cp = self.Xt.copy()
 
         for h in range(X.shape[0]):

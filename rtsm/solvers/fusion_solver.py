@@ -83,7 +83,9 @@ class SplitManager:
         for sol in sols:
             solution = sol.tests
             # Now we need to check that it works
-            if predictor.can_predict([t in solution for t in new_inst.tests]):
+            if predictor.can_predict(
+                np.asarray([t in solution for t in new_inst.tests])
+            ):
                 return True, solution
         return False, []
 
