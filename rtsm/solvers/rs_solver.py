@@ -1,5 +1,5 @@
 from concurrent.futures import ProcessPoolExecutor, wait
-from typing import Callable, Optional, Set, Tuple, Union
+from typing import Callable, Optional, Set, Tuple, Union, List
 
 import numpy as np
 
@@ -14,22 +14,24 @@ F = get_color_helper()
 
 
 def __new_sol__(
-    sol: Tuple[bool, ...],
+    sol: np.ndarray,
     current_best: int,
-    solutions: Set[Tuple[bool, ...]],
+    solutions: List[np.ndarray],
     pbar: ProgressBar,
-    on_progress_callback: Optional[Callable[[Set[Solution]], None]] = None,
+    converter: Callable[[np.ndarray], Solution],
+    on_progress_callback: Optional[Callable[[List[Solution]], None]] = None,
 ):
-    score = sum(sol)
+    score = np.sum(sol)
+    print(score, current_best, sol, solutions)
     if score < current_best:
         pbar.set_best(score, score / len(sol))
         solutions.clear()
-        solutions.add(sol)
+        solutions.append(sol)
         if on_progress_callback is not None:
-            on_progress_callback(solutions)
+            on_progress_callback([converter(sol)])
         return score
-    elif score == current_best and sol not in solutions:
-        solutions.add(sol)
+    elif score == current_best:
+        solutions.append(sol)
     return current_best
 
 
@@ -39,15 +41,15 @@ def __sample__(
     predictor: Predictor,
     seed: Union[int, np.random.Generator],
     max_samples: int,
-) -> Tuple[bool, int, Tuple[bool, ...]]:
+) -> Tuple[bool, int, np.ndarray]:
     choices = list(range(size))
     rng = np.random.default_rng(seed) if isinstance(seed, int) else seed
     for used in range(max_samples):
         selected = rng.choice(choices, n, replace=False)
-        current = [i in selected for i in range(size)]
+        current = np.asarray([i in selected for i in range(size)])
         if predictor.can_predict(current):
-            return True, used + 1, tuple(current)
-    return False, max_samples, tuple()
+            return True, used + 1, current
+    return False, max_samples, None
 
 
 class RandomSolutionSolver(Solver):
@@ -82,9 +84,9 @@ class RandomSolutionSolver(Solver):
         self.instance = instance
         SAMPLING_UNIT = 100
         n = len(instance.tests)
-        init = instance.warm_start()
-        self.best_sol = {init}
-        best_cost = sum(init)
+        init = np.asarray(instance.warm_start())
+        self.best_sol = [init]
+        best_cost = np.sum(init)
         initial_cost = best_cost
         if verbose:
             print(
@@ -92,6 +94,9 @@ class RandomSolutionSolver(Solver):
             )
 
         budget = samples
+
+        def convert(array):
+            return Solution(self.instance, tuple(self.instance.get_tests(array)))
 
         pbar = ProgressBar(total=samples, name=self.get_name(), use_tqdm=use_tqdm)
         if nprocs > 1:
@@ -121,7 +126,12 @@ class RandomSolutionSolver(Solver):
                     if not has_found:
                         continue
                     best_cost = __new_sol__(
-                        out, best_cost, self.best_sol, pbar, on_progress_callback
+                        out,
+                        best_cost,
+                        self.best_sol,
+                        pbar,
+                        convert,
+                        on_progress_callback,
                     )
             pool.shutdown()
 
@@ -139,7 +149,7 @@ class RandomSolutionSolver(Solver):
                 if not has_found:
                     continue
                 best_cost = __new_sol__(
-                    out, best_cost, self.best_sol, pbar, on_progress_callback
+                    out, best_cost, self.best_sol, pbar, convert, on_progress_callback
                 )
         pbar.close()
 
