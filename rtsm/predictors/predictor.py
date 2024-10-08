@@ -15,14 +15,31 @@ def to_ranking(perfs: np.ndarray) -> np.ndarray:
     return np.repeat(perfs, n, axis=1).reshape((-1, n, n)) > perfs.reshape((-1, 1, n))
 
 
+def to_ranking1d(perfs: np.ndarray) -> np.ndarray:
+    """
+    Transforms a performance matrix (variant) into a ranking matrix.
+    """
+    return np.greater.outer(perfs, perfs)
+
+
 def ranking_error(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
     """
     Takes two ranking matrices and returns the percentage of errors.
     The percentage of errors is percentage of order relations that were different.
     """
-    num = np.max(np.sum(target_ranks != pred_ranks, axis=(1, 2)))
+    num = np.max(np.add.reduce(target_ranks != pred_ranks, axis=(1, 2)))
     n = target_ranks.shape[1]
     return num / (np.prod(target_ranks.shape[1:]) - n)
+
+
+def ranking_error2d(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
+    """
+    Takes two ranking matrices and returns the percentage of errors.
+    The percentage of errors is percentage of order relations that were different.
+    """
+    num = np.add.reduce(target_ranks != pred_ranks, axis=(0, 1))
+    n = target_ranks.shape[1]
+    return num / (np.prod(target_ranks.shape) - n)
 
 
 def to_ranks(ranking_matrix: np.ndarray) -> np.ndarray:

@@ -2,7 +2,14 @@ from typing import Tuple, List
 import json
 
 from rtsm.instance import Instance
-from rtsm.predictors.predictor import Predictor, Prediction, to_ranking, ranking_error
+from rtsm.predictors.predictor import (
+    Predictor,
+    Prediction,
+    to_ranking,
+    to_ranking1d,
+    ranking_error,
+    ranking_error2d,
+)
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -75,12 +82,22 @@ class LinearRegressionPredictor(Predictor):
         return "linear"
 
     def can_predict(self, usable: Tuple[bool, ...]) -> bool:
-        return ranking_error(self.Rt, self.get_ranking(usable)) <= 1 - self.accuracy
+        X = self.Xt[:, :, usable]
+        Y = self.Yt[:, :, [not x for x in usable]]
+        for h in range(X.shape[0]):
+            D = np.add.reduce(self.Xt[h, :, :], axis=-1)
+            for i in range(Y.shape[-1]):
+                D[:] += __learn_linear_model__(
+                    X[h, :, :], Y[h, :, i].reshape((-1)), self.positive
+                )[-1]
+            if ranking_error2d(self.Rt[h, :, :], to_ranking1d(D)) > 1 - self.accuracy:
+                return False
+        return True
 
     def get_ranking(self, usable: Tuple[bool, ...]) -> np.ndarray:
         X = self.Xt[:, :, usable]
         Y = self.Yt[:, :, [not x for x in usable]]
-        D = np.sum(self.Xt, axis=-1)
+        D = np.add.reduce(self.Xt, axis=-1)
         for h in range(X.shape[0]):
             for i in range(Y.shape[-1]):
                 D[h, :] += __learn_linear_model__(
