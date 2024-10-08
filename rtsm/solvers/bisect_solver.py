@@ -14,41 +14,40 @@ F = get_color_helper()
 
 
 def __split__(
-    current: Tuple[bool, ...],
-    must_keep: Tuple[bool, ...],
+    current: np.ndarray,
+    must_keep: np.ndarray,
     n: int,
     rng: np.random.Generator,
-) -> Generator[Tuple[bool, ...], None, None]:
+) -> Generator[np.ndarray, None, None]:
     """
     Split current choices in n different partitions.
     I.E. we set some elements of current to 0.
     that is outputs are included in current
     and must_keep are included in outputs
     """
-    indices = [i for i, x in enumerate(current) if x and not must_keep[i]]
+    indices = np.nonzero(current & (~must_keep))[0]
     rng.shuffle(indices)
     size = len(indices) // n
     parts = n
     while parts > 0:
-        if parts == 1:
-            yield tuple(must_keep[i] or i in indices for i in range(len(current)))
+        if parts > 1:
+            selected = indices[size * (n - parts) : size * (n + 1 - parts)]
         else:
-            selected = indices[:size]
-            indices = indices[size:]
-            yield tuple(must_keep[i] or i in selected for i in range(len(current)))
+            selected = indices[size * (n - 1) :]
+        r = must_keep.copy()
+        r[selected] = True
+        yield r
         parts -= 1
 
 
 def __find_necessary__(
-    tcurrent: Tuple[bool, ...], tmust_keep: Tuple[bool, ...], predictor: Predictor
-) -> Tuple[Tuple[bool, ...], bool]:
+    current: np.ndarray, must_keep: np.ndarray, predictor: Predictor
+) -> bool:
     """
     Use property of stability by inclusion to find out what elements must be kept.
-    That is for each element that may benecessary remove it and try to find if it is SAT.
+    That is for each element that may be ecessary remove it and try to find if it is SAT.
     if it SAT no problem, if it is NOT SAT then it must be necessary.
     """
-    current = list(tcurrent)
-    must_keep = list(tmust_keep)
     n = len(current)
     fixed = 0
     # Subset test part
@@ -61,24 +60,24 @@ def __find_necessary__(
         must_keep[i] = not sat
         fixed += must_keep[i]
         current[i] = True
-    return tuple(must_keep), fixed == n
+    return fixed == n
 
 
 def __bisect__(
-    current: Tuple[bool, ...],
-    must_keep: Tuple[bool, ...],
+    current: np.ndarray,
+    must_keep: np.ndarray,
     best_so_far: int,
     seed: Union[int, np.random.Generator],
     predictor: Predictor,
-):
+) -> np.ndarray:
     """
     Assume current is SAT
     """
     rng = np.random.default_rng(seed) if isinstance(seed, int) else seed
     while True:
-        min_score = sum(must_keep)
+        min_score = np.sum(must_keep)
         # IF cannot remove element from current OR no better case than best so far
-        if min_score >= sum(current) or min_score >= best_so_far:
+        if min_score >= np.sum(current) or min_score >= best_so_far:
             return current
         # Split current in 2
         li = list(__split__(current, must_keep, 2, rng))
@@ -86,27 +85,27 @@ def __bisect__(
         # If one split is SAT, then great change current to it and update must_keep
         if predictor.can_predict(a):
             current = a
-            if min_score <= 1 and sum(a) == 1:
+            if min_score <= 1 and np.sum(a) == 1:
                 return a
-            must_keep, has_finished = __find_necessary__(current, must_keep, predictor)
+            has_finished = __find_necessary__(current, must_keep, predictor)
             if has_finished:
                 return must_keep
         elif predictor.can_predict(b):
             current = b
-            if min_score <= 1 and sum(b) == 1:
+            if min_score <= 1 and np.sum(b) == 1:
                 return b
-            must_keep, has_finished = __find_necessary__(current, must_keep, predictor)
+            has_finished = __find_necessary__(current, must_keep, predictor)
             if has_finished:
                 return must_keep
         # Otherwise
         else:
             # then either we must keep all of a or all of b
             # So try to solve either problem and get the best solution
-            sol_a = __bisect__(current, a, best_so_far, rng, predictor)
-            score_a = sum(sol_a)
+            sol_a = __bisect__(current.copy(), a, best_so_far, rng, predictor)
+            score_a = np.sum(sol_a)
             best_so_far = min(score_a, best_so_far)
             sol_b = __bisect__(current, b, best_so_far, rng, predictor)
-            score_b = sum(sol_b)
+            score_b = np.sum(sol_b)
             if score_a < score_b:
                 sol = sol_a
             else:
@@ -115,38 +114,41 @@ def __bisect__(
 
 
 def __improve_upon__(
-    sol_set: Set[Tuple[bool, ...],],
+    sol_set: List[np.ndarray,],
     seed: Union[int, np.random.Generator],
     predictor: Predictor,
-) -> Tuple[bool, ...]:
+) -> np.ndarray:
     one_sol = list(sol_set)[0]
-    current = tuple(any(sol[i] for sol in sol_set) for i in range(len(one_sol)))
-    must_keep = tuple(all(sol[i] for sol in sol_set) for i in range(len(one_sol)))
-    return __bisect__(current, must_keep, sum(one_sol), seed, predictor)
+    current = np.asarray([any(sol[i] for sol in sol_set) for i in range(len(one_sol))])
+    must_keep = np.asarray(
+        [all(sol[i] for sol in sol_set) for i in range(len(one_sol))]
+    )
+    return __bisect__(current, must_keep, np.sum(one_sol), seed, predictor)
 
 
 def __new_sol__(
-    sol: Tuple[bool, ...],
+    sol: np.ndarray,
     current_best: int,
-    solutions: Set[Tuple[bool, ...]],
-    improvement_queue: List[Set[Tuple[bool, ...]]],
+    solutions: List[np.ndarray],
+    improvement_queue: List[List[np.ndarray]],
     pbar: ProgressBar,
     try_improve: bool,
+    converter: Callable[[np.ndarray], Solution],
     on_progress_callback: Optional[Callable[[Set[Solution]], None]] = None,
 ):
-    score = sum(sol)
+    score = np.sum(sol)
     if score < current_best:
         pbar.set_best(score, score / len(sol))
         solutions.clear()
-        solutions.add(sol)
+        solutions.append(sol)
         if on_progress_callback is not None:
-            on_progress_callback(solutions)
+            on_progress_callback([converter(sol)])
         return score
-    elif score == current_best and sol not in solutions:
+    elif score == current_best:
         if try_improve:
             for x in solutions:
-                improvement_queue.append({x, sol})
-        solutions.add(sol)
+                improvement_queue.append([x, sol])
+        solutions.append(sol)
     return current_best
 
 
@@ -186,23 +188,26 @@ class BisectSolver(Solver):
         )
         self.instance = instance
         n = len(instance.tests)
-        init = instance.warm_start()
-        initial_best = sum(init)
-        self.best_sol = {init}
+        init = np.asarray(instance.warm_start())
+        initial_best = np.sum(init)
+        self.best_sol = [init]
         if verbose:
             print(
                 f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{initial_best}{F.RESET} ({F.LIGHTCYAN_EX}{initial_best / len(init):.1%}{F.RESET})"
             )
-        must_keep = __find_necessary__(init, tuple(False for _ in range(n)), predictor)[
-            0
-        ]
-        n_kept = sum(must_keep)
-        unfixed = len(must_keep) - n_kept - (len(init) - sum(init))
+        must_keep = np.copy(init)
+        must_keep[:] = False
+        __find_necessary__(init, must_keep, predictor)
+        n_kept = np.sum(must_keep)
+        unfixed = len(must_keep) - n_kept - (len(init) - np.sum(init))
         if verbose:
             print(
                 f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} top level:\n\tbest possible solution: {F.LIGHTCYAN_EX}{n_kept}{F.RESET} ({F.LIGHTCYAN_EX}{n_kept / initial_best:.1%}{F.RESET})\n\tnot fixed: {F.LIGHTCYAN_EX}{unfixed}{F.RESET} ({F.LIGHTCYAN_EX}{unfixed / initial_best:.1%}{F.RESET})"
             )
         best_possible = max(n_kept, 1)
+
+        def convert(array):
+            return Solution(self.instance, tuple(self.instance.get_tests(array)))
 
         improvement_queue = []
         pbar = ProgressBar(total=samples, name=self.get_name(), use_tqdm=use_tqdm)
@@ -229,8 +234,8 @@ class BisectSolver(Solver):
                         futures.append(
                             pool.submit(
                                 __bisect__,
-                                tuple(init),
-                                must_keep,
+                                init.copy(),
+                                must_keep.copy(),
                                 initial_best,
                                 queued,
                                 predictor,
@@ -249,6 +254,7 @@ class BisectSolver(Solver):
                         improvement_queue,
                         pbar,
                         self.try_improve,
+                        convert,
                         on_progress_callback,
                     )
                     pbar.update(1)
@@ -263,7 +269,11 @@ class BisectSolver(Solver):
                     )
                 else:
                     out = __bisect__(
-                        tuple(init), must_keep, initial_best, i + (seed or 0), predictor
+                        init.copy(),
+                        must_keep.copy(),
+                        initial_best,
+                        i + (seed or 0),
+                        predictor,
                     )
                 initial_best = __new_sol__(
                     out,
@@ -272,6 +282,7 @@ class BisectSolver(Solver):
                     improvement_queue,
                     pbar,
                     self.try_improve,
+                    convert,
                     on_progress_callback,
                 )
                 pbar.update(1)

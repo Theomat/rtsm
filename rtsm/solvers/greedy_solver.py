@@ -13,11 +13,11 @@ F = get_color_helper()
 
 
 def __new_sol__(
-    sol: Tuple[bool, ...],
+    sol: np.ndarray,
     current_best: int,
     pbar: ProgressBar,
 ):
-    score = sum(sol)
+    score = np.sum(sol)
     if score < current_best:
         pbar.set_best(score, score / len(sol))
         return score
@@ -50,16 +50,16 @@ class GreedySolver(Solver):
             else predictor_builder
         )
         self.instance = instance
-        init = instance.warm_start()
-        self.best_sol = {init}
-        best_cost = sum(init)
+        init = np.asarray(instance.warm_start())
+        self.best_sol = [init]
+        best_cost = np.sum(init)
         if verbose:
             print(
                 f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_cost}{F.RESET} ({F.LIGHTCYAN_EX}{best_cost / len(init):.1%}{F.RESET})"
             )
 
         pbar = ProgressBar(total=best_cost, name=self.get_name(), use_tqdm=use_tqdm)
-        allowed = list(init)
+        allowed = np.copy(init)
         for _ in range(best_cost):
             mini = float("inf")
             mini_index = 0
