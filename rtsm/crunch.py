@@ -4,6 +4,7 @@ if __name__ == "__main__":
     import os
     import json
     import atexit
+    import time
 
     from rtsm.instance import Instance
     from rtsm.solution import Solution
@@ -157,11 +158,23 @@ if __name__ == "__main__":
     if verbose:
         print(f"base solver: {F.CYAN}{base_solver.get_name()}{F.RESET}")
 
+    start = time.perf_counter_ns()
+
     def save(sols):
+        end = time.perf_counter_ns() - start
+        with open(args.output, "w") as fd:
+            json.dump(
+                {
+                    "solutions": Solution.to_json(sols),
+                    "runtime": int(end / 1e6) / 1e3,
+                    "base_solver": args.solver,
+                    "predictor": args.predictor,
+                    "accuracy": args.accuracy,
+                },
+                fd,
+            )
         if verbose:
             print(f"saved to {F.GREEN}{args.output}{F.RESET}")
-        with open(args.output, "w") as fd:
-            json.dump(Solution.to_json(sols), fd)
 
     solver = FusionSolver(base_solver.__class__, -1)
 

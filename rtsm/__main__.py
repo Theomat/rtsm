@@ -4,6 +4,7 @@ if __name__ == "__main__":
     import os
     import json
     import atexit
+    import time
 
     from rtsm.utils.color_helper import get_color_helper
 
@@ -172,11 +173,23 @@ if __name__ == "__main__":
     if verbose:
         print(f"solver: {F.CYAN}{solver.get_name()}{F.RESET}")
 
+    start = time.perf_counter_ns()
+
     def save(sols):
+        end = time.perf_counter_ns() - start
+        with open(args.output, "w") as fd:
+            json.dump(
+                {
+                    "solutions": Solution.to_json(sols),
+                    "runtime": int(end / 1e6) / 1e3,
+                    "base_solver": args.solver,
+                    "predictor": args.predictor,
+                    "accuracy": args.accuracy,
+                },
+                fd,
+            )
         if verbose:
             print(f"saved to {F.GREEN}{args.output}{F.RESET}")
-        with open(args.output, "w") as fd:
-            json.dump(Solution.to_json(sols), fd)
 
     # Anytime solving
     def save_result_pre_emptively():

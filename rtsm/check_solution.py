@@ -62,12 +62,12 @@ if __name__ == "__main__":
         help=f"file containing a super instance of the data, supported extensions are: {', '.join(supported_extensions)}",
     )
     parser.add_argument("--swap", action="store_true", help="swap variants and tests")
-    parser.add_argument(
-        "--predictor",
-        choices=list(predictors.keys()),
-        default=list(predictors.keys())[0],
-        help="prediction model to use",
-    )
+    # parser.add_argument(
+    #     "--predictor",
+    #     choices=list(predictors.keys()),
+    #     default=list(predictors.keys())[0],
+    #     help="prediction model to use",
+    # )
 
     args = parser.parse_args()
     swap: bool = args.swap
@@ -87,7 +87,9 @@ if __name__ == "__main__":
         )
         sys.exit(1)
     with open(initial_solution) as fd:
-        solution_list = json.load(fd)
+        data = json.load(fd)
+        predictor_name = data["predictor"]
+        solution_list = data["solutions"]
         if len(solution_list) == 0:
             print(
                 f"{F.RED}solution file contains no solution!{F.RESET}",
@@ -99,7 +101,7 @@ if __name__ == "__main__":
             f"loaded solution of size {F.CYAN}{len(one_sol)}{F.RESET} ({F.CYAN}{len(one_sol)/len(instance.tests):.1%}{F.RESET})"
         )
     # Build predictor
-    predictor: Predictor = predictors[args.predictor](instance)
+    predictor: Predictor = predictors[predictor_name](instance)
     print(f"prediction model: {F.CYAN}{predictor.get_name()}{F.RESET}")
 
     R = to_ranking(np.sum(instance.performance_matrix, axis=-1))
