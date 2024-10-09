@@ -15,6 +15,7 @@ from rtsm.predictors.linear_predictor import LinearRegressionPredictor
 from rtsm.solvers.bisect_solver import BisectSolver
 from rtsm.solvers.greedy_solver import GreedySolver
 from rtsm.solvers.pca_solver import PCASolver
+from rtsm.solvers.friedman_solver import FriedmanSolver
 from rtsm.solvers.rs_solver import RandomSolutionSolver
 from rtsm.solvers.solver import Solver
 
@@ -69,6 +70,7 @@ def get_solvers() -> Dict[str, Solver]:
         BisectSolver(True),
         GreedySolver(),
         PCASolver(),
+        FriedmanSolver(),
     ]
     try:
         from rtsm.solvers.ga_solver import GASolver
