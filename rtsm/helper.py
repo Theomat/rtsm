@@ -11,7 +11,6 @@ from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
 from rtsm.predictors.no_predictor import NoPredictor
 from rtsm.predictors.logistic_boolean_predictor import LogisticBooleanPredictor
-from rtsm.predictors.logistic_rank_predictor import LogisticRankPredictor
 from rtsm.predictors.linear_predictor import LinearRegressionPredictor
 from rtsm.solvers.bisect_solver import BisectSolver
 from rtsm.solvers.greedy_solver import GreedySolver
@@ -55,7 +54,6 @@ def get_predictors() -> Dict[str, Callable[[Instance], Predictor]]:
         "auto": adaptative_predictor,
         "none": NoPredictor,
         "logistic-bool": LogisticBooleanPredictor,
-        "logistic-rank": LogisticRankPredictor,
         "linear": LinearRegressionPredictor,
         "linear+": lambda x, **kwargs: LinearRegressionPredictor(
             x, positive=True, **kwargs
