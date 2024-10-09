@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Set, Tuple, Union
+from typing import Callable, Optional, Set, Tuple, Union, Any
 
 import numpy as np
 
@@ -32,8 +32,10 @@ class DeterministicSolver(Solver, ABC):
         instance: Instance,
         predictor_builder: Union[Callable[[Instance], Predictor], Predictor],
         use_tqdm: bool = False,
+        nprocs: int = 1,
+        on_progress_callback: Optional[Callable[[Set[Solution]], None]] = None,
         verbose: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> Set[Solution]:
         """
         Try to solve an instance of RTSM and provides a set of solutions.
@@ -59,6 +61,7 @@ class DeterministicSolver(Solver, ABC):
             allowed[to_remove_index] = False
             if predictor.can_predict(allowed):
                 best_cost = __new_sol__(allowed, best_cost, pbar)
+                self.best_sol = [allowed]
             else:
                 break
             pbar.update(1)
