@@ -206,8 +206,8 @@ if __name__ == "__main__":
     solutions = solver.solve(
         instance,
         predictor_builder,
-        verbose,
-        procs,
+        use_tqdm=verbose,
+        nprocs=procs,
         verbose=verbose,
         samples=samples,
         seed=args.seed,
