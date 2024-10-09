@@ -58,6 +58,8 @@ class DeterministicSolver(Solver, ABC):
         allowed = np.copy(init)
         for _ in range(best_cost):
             to_remove_index = self.__choose_index_to_remove__(allowed, predictor)
+            if to_remove_index is None:
+                break
             allowed[to_remove_index] = False
             if predictor.can_predict(allowed):
                 best_cost = __new_sol__(allowed, best_cost, pbar)
@@ -78,7 +80,7 @@ class DeterministicSolver(Solver, ABC):
     @abstractmethod
     def __choose_index_to_remove__(
         self, current: np.ndarray, predictor: Predictor
-    ) -> int:
+    ) -> Optional[int]:
         pass
 
     def early_exit(self) -> Set[Solution]:

@@ -1,5 +1,7 @@
 import numpy as np
 
+from typing import Optional
+
 from rtsm.predictors.predictor import Predictor
 from rtsm.solvers.deterministic_solver import DeterministicSolver
 
@@ -17,7 +19,7 @@ class PCASolver(DeterministicSolver):
 
     def __choose_index_to_remove__(
         self, current: np.ndarray, predictor: Predictor
-    ) -> int:
+    ) -> Optional[int]:
         assert (
             self.instance.performance_matrix.shape[0] == 1
         ), "PCASolver: does not support multiple performance measures"
