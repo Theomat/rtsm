@@ -24,11 +24,13 @@ class FriedmanSolver(DeterministicSolver):
         X = X.reshape((-1, np.sum(current))).T
         full_ranks = rankdata(X, axis=-1)
         ranks = np.add.reduce(full_ranks, axis=-1)
-        n = X.shape[0]
-        k = X.shape[-1]
+        n = X.shape[-1]
+        k = X.shape[0]
         T, p = friedmanchisquare(*[X[i] for i in range(n)])
         if p > alpha:
             return None
+        print(n, k)
+        print(np.max(full_ranks))
         student = t.ppf(1 - alpha / 2, n)
         c1 = np.sum(np.square(full_ranks)) - k * n * (n + 1) ** 2 / 4
         c2 = 1 - T / (k * (n - 1))
