@@ -22,7 +22,7 @@ def __new_sol__(
     on_progress_callback: Optional[Callable[[List[Solution]], None]] = None,
 ):
     score = np.sum(sol)
-    print(score, current_best, sol, solutions)
+    # print(score, current_best, sol, solutions)
     if score < current_best:
         pbar.set_best(score, score / len(sol))
         solutions.clear()
