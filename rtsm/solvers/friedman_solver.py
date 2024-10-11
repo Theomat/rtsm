@@ -29,15 +29,15 @@ class FriedmanSolver(DeterministicSolver):
         T, p = friedmanchisquare(*[X[i] for i in range(n)])
         if p > alpha:
             return None
-        print(n, k)
-        print(np.max(full_ranks))
+        # print(n, k)
+        # print(np.max(full_ranks))
         student = t.ppf(1 - alpha / 2, n)
         c1 = np.sum(np.square(full_ranks)) - k * n * (n + 1) ** 2 / 4
         c2 = 1 - T / (k * (n - 1))
         divider = np.sqrt(2 * k * c2 * c1 / ((k - 1) * (n - 1)))
-        print(
-            c1, c2, divider, np.sum(np.square(full_ranks)), k * n * ((n + 1) ** 2) / 4
-        )
+        # print(
+        #     c1, c2, divider, np.sum(np.square(full_ranks)), k * n * ((n + 1) ** 2) / 4
+        # )
         best = np.argmin(ranks)
         rj = ranks[best]
         for h in range(n):
