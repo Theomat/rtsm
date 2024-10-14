@@ -9,6 +9,8 @@ if __name__ == "__main__":
     from scipy.stats import spearmanr, permutation_test
     import numpy as np
 
+    from rtsm.solution import Solution
+
     def spearman_data(x: np.ndarray, y: np.ndarray) -> Tuple[float, float]:
         rs = spearmanr(x, y)
         dof = len(x) - 2
@@ -103,6 +105,16 @@ if __name__ == "__main__":
     # Build predictor
     predictor: Predictor = predictors[predictor_name](instance)
     print(f"prediction model: {F.CYAN}{predictor.get_name()}{F.RESET}")
+    print(f"target accuracy: {F.CYAN}{data['accuracy']:.2%}{F.RESET}")
+
+    # Measure performance gains
+    print("performance gains:")
+    one_sol
+    my_sol = Solution(instance, tuple(one_sol))
+    for perf, (val, total) in my_sol.measure_performances().items():
+        print(
+            f"\t{perf}: {F.GREEN}{val:.2}{F.RESET} / {F.CYAN}{total:.2}{F.RESET} ({F.GREEN}{val/total:.2%}{F.RESET})"
+        )
 
     R = to_ranking(np.sum(instance.performance_matrix, axis=-1))
     ranks_original = to_ranks(R)
