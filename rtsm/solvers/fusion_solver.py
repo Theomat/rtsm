@@ -4,6 +4,8 @@ from typing import Any, Callable, List, Optional, Set, Tuple
 from colorama import Fore as F
 import random
 
+import numpy as np
+
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
 from rtsm.solvers.solver import Solver
