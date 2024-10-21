@@ -102,7 +102,12 @@ class SplitManager:
             self.dependencies[new_id] = [a, b]
 
             self.queue.append(
-                (new_id, self.instance.subset(self.solutions[a] + self.solutions[b]))
+                (
+                    new_id,
+                    self.instance.subset(
+                        list(self.solutions[a]) + list(self.solutions[b])
+                    ),
+                )
             )
 
     def feed(self, data: Tuple[int, Set[Solution]]) -> bool:
