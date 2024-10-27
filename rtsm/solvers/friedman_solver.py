@@ -40,7 +40,7 @@ class FriedmanSolver(DeterministicSolver):
         # )
         best = np.argmin(ranks)
         rj = ranks[best]
-        for h in range(n):
+        for h in range(k):
             if h == best:
                 continue
             rh = ranks[h]
