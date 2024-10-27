@@ -26,7 +26,7 @@ class FriedmanSolver(DeterministicSolver):
         ranks = np.add.reduce(full_ranks, axis=-1)
         n = X.shape[-1]
         k = X.shape[0]
-        T, p = friedmanchisquare(*[X[i] for i in range(n)])
+        T, p = friedmanchisquare(*[X[i] for i in range(k)])
         if p > alpha:
             return None
         # print(n, k)
