@@ -86,11 +86,12 @@ class LinearRegressionPredictor(Predictor):
         X = self.Xt[:, :, mask]
         Y = self.Yt[:, :, ~mask]
         for h in range(X.shape[0]):
-            D = np.add.reduce(self.Xt[h, :, :], axis=-1)
+            D = np.add.reduce(X[h], axis=-1)
             for i in range(Y.shape[-1]):
-                D[:] += __learn_linear_model__(
+                learnt = __learn_linear_model__(
                     X[h, :, :], Y[h, :, i].reshape((-1)), self.positive
                 )[-1]
+                D[:] += learnt
             if ranking_error2d(self.Rt[h, :, :], to_ranking1d(D)) > 1 - self.accuracy:
                 return False
         return True
