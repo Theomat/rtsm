@@ -100,7 +100,7 @@ class LinearRegressionPredictor(Predictor):
         mask = np.asarray(usable)
         X = self.Xt[:, :, mask]
         Y = self.Yt[:, :, ~mask]
-        D = np.add.reduce(self.Xt, axis=-1)
+        D = np.add.reduce(X, axis=-1)
         for h in range(X.shape[0]):
             for i in range(Y.shape[-1]):
                 D[h, :] += __learn_linear_model__(
