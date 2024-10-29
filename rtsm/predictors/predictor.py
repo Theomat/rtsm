@@ -12,12 +12,14 @@ def to_ranking(perfs: np.ndarray) -> np.ndarray:
     Transforms a performance matrix (k, variant) into a ranking matrix.
     """
     n = perfs.shape[1]
-    return np.repeat(perfs, n, axis=1).reshape((-1, n, n)) > perfs.reshape((-1, 1, n))
+    return np.diagonal(np.greater.outer(perfs, perfs), axis1=0, axis2=2).reshape(
+        (-1, n, n)
+    )
 
 
 def to_ranking1d(perfs: np.ndarray) -> np.ndarray:
     """
-    Transforms a performance matrix (variant) into a ranking matrix.
+    Transforms a performance vector (variant) into a ranking matrix.
     """
     return np.greater.outer(perfs, perfs)
 
