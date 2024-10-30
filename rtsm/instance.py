@@ -71,15 +71,15 @@ class Instance:
         Returns the instance where only the selected subset of tests are kept.
         """
         index2test = {self.tests.index(t): t for t in selected_tests}
-        instance = Instance(self.performances, self.variants, list(index2test.values()))
+        instance = Instance(self.performances, self.variants, selected_tests[:])
         for h, performance in enumerate(self.performances):
             for i, variant in enumerate(self.variants):
                 for index, test in index2test.items():
                     instance.store_performance(
-                        performance, variant, test, self.performance_matrix[h, i, index]
+                        h, i, test, self.performance_matrix[h, i, index]
                     )
         if self.__warm_start is not None:
-            start = [t for t, b in zip(self.tests, self.warm_start()) if b]
+            start = [b for t, b in zip(self.tests, self.warm_start()) if t in selected_tests]
             instance.set_start(start)
         return instance
 
