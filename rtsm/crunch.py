@@ -209,7 +209,8 @@ if __name__ == "__main__":
         )
         if len(solutions) == 0:
             break
-        one_sol = list(solutions)[0].tests
+        sols = sorted([(len(x.tests), x) for x in solutions], key=lambda x: x[0])
+        one_sol = sols[0][1].tests
         new_best = len(one_sol)
         if new_best < current_solution_size:
             save(solutions)
