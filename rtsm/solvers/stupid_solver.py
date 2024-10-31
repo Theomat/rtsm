@@ -44,7 +44,7 @@ def __sample_candidates__(
     rng = np.random.default_rng(seed) if isinstance(seed, int) else seed
     choices = list(range(size))
     new_best = size
-    sol = np.asarray([False for i in range(size)])
+    sol = np.asarray([False for i in range(n)])
     for used in range(max_samples):
         size_of_sample = rng.integers(1, new_best)
         rng.shuffle(choices)
