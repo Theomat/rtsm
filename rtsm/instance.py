@@ -98,6 +98,10 @@ class Instance:
             end = start + size
             if parts == 1:
                 end = len(self.tests)
+            if len(test_i[start:end]) == 0:
+                parts -=1
+                start = end
+                continue
             out.append(self.subset(test_i[start:end]))
             start = end
             parts -= 1
