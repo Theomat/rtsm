@@ -9,6 +9,7 @@ if __name__ == "__main__":
     from rtsm.instance import Instance
     from rtsm.solution import Solution
     from rtsm.predictors.predictor import Predictor
+    from rtsm.solvers.retry_solver import RetrySolver
     from rtsm.solvers.fusion_solver import FusionSolver
     from rtsm.helper import (
         get_predictors,
@@ -72,6 +73,7 @@ if __name__ == "__main__":
 
     parser.add_argument("-q", "--quiet", action="store_true")
     parser.add_argument("--no-autosave", action="store_true")
+    parser.add_argument("--retry", action="store_true")
 
     parser.add_argument(
         "-p",
@@ -91,6 +93,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     verbose: bool = not args.quiet
+    retry: bool = args.retry
     swap: bool = args.swap
     no_autosave: bool = args.no_autosave
     procs: int = args.procs
@@ -176,7 +179,7 @@ if __name__ == "__main__":
         if verbose:
             print(f"saved to {F.GREEN}{args.output}{F.RESET}")
 
-    solver = FusionSolver(base_solver.__class__, -1)
+    solver = FusionSolver(base_solver.__class__, -1) if not retry else RetrySolver(base_solver.__class__, -1)
 
     # Anytime solving
     def save_result_pre_emptively():
