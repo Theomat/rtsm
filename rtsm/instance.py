@@ -77,9 +77,9 @@ class Instance:
                 for index, test in index2test.items():
                     instance.store_performance(
                         h, i, test, self.performance_matrix[h, i, index]
-                    )
+                    ) 
         if self.__warm_start is not None:
-            start = [b for t, b in zip(self.tests, self.warm_start()) if t in selected_tests]
+            start = [t for t, b in zip(self.tests, self.warm_start()) if b]
             instance.set_start(start)
         return instance
 
