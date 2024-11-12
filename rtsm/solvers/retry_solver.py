@@ -25,7 +25,6 @@ def __solve__(
 
 
 class SplitRetry:
-    
     def __init__(
         self,
         instance: Instance,
@@ -39,9 +38,11 @@ class SplitRetry:
         self.t = max_tries
         self.splits = splits
         self.seed = seed
-        self.rng = random.Random(seed) # not numpy since we want to use it to shuffle a queue
+        self.rng = random.Random(
+            seed
+        )  # not numpy since we want to use it to shuffle a queue
         self.__new_try__()
-        
+
     def __new_try__(self):
         self.t -= 1
         instances = self.instance.split(self.splits, seed=(self.seed or 0) + self.t)
@@ -53,7 +54,6 @@ class SplitRetry:
         self.dependencies = {i: [i] for i in range(len(instances))}
         self.merge_queue = []
         self.id_generator = len(self.solutions)
-        
 
     def has_next(self) -> bool:
         return len(self.queue) > 0
@@ -184,8 +184,8 @@ class RetrySolver(Solver):
         self.split_manager = SplitRetry(
             instance, self.splits, seed, predictor_builder, max_tries
         )
+        best_score = self.split_manager.current_best_score()
         if verbose:
-            best_score = self.split_manager.current_best_score()
             print(
                 f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_score}{F.RESET} ({F.LIGHTCYAN_EX}{best_score/ len(instance.tests):.1%}{F.RESET})"
             )
@@ -222,7 +222,10 @@ class RetrySolver(Solver):
                     futures.remove(future)
                     pbar.update(1)
                     if accepted:
-                        if self.split_manager.current_best_score() < score and on_progress_callback is not None:
+                        if (
+                            self.split_manager.current_best_score() < score
+                            and on_progress_callback is not None
+                        ):
                             on_progress_callback(self.split_manager.get_solutions())
                 score = self.split_manager.current_best_score()
                 pbar.set_best(score, score / n)
@@ -239,7 +242,10 @@ class RetrySolver(Solver):
                 accepted = self.split_manager.feed((id, out))
                 pbar.update(1)
                 if accepted:
-                    if self.split_manager.current_best_score() < score and on_progress_callback is not None:
+                    if (
+                        self.split_manager.current_best_score() < score
+                        and on_progress_callback is not None
+                    ):
                         on_progress_callback(self.split_manager.get_solutions())
                 score = self.split_manager.current_best_score()
                 pbar.set_best(score, score / n)

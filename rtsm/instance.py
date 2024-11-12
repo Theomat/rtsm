@@ -57,12 +57,12 @@ class Instance:
         """
         Return the same instance but with variants and tests swapped.
         """
-        instance = Instance(self.performances, self.tests, self.variants)
+        instance = Instance(self.performances[:], self.tests[:], self.variants[:])
         for h, performance in enumerate(self.performances):
             for i, variant in enumerate(self.variants):
                 for index, test in enumerate(self.tests):
                     instance.store_performance(
-                        performance, test, variant, self.performance_matrix[h, i, index]
+                        h, index, i, self.performance_matrix[h, i, index]
                     )
         return instance
 
@@ -77,7 +77,7 @@ class Instance:
                 for index, test in index2test.items():
                     instance.store_performance(
                         h, i, test, self.performance_matrix[h, i, index]
-                    ) 
+                    )
         if self.__warm_start is not None:
             start = [t for t, b in zip(self.tests, self.warm_start()) if b]
             instance.set_start(start)
@@ -99,7 +99,7 @@ class Instance:
             if parts == 1:
                 end = len(self.tests)
             if len(test_i[start:end]) == 0:
-                parts -=1
+                parts -= 1
                 start = end
                 continue
             out.append(self.subset(test_i[start:end]))

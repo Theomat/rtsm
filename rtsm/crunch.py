@@ -179,7 +179,11 @@ if __name__ == "__main__":
         if verbose:
             print(f"saved to {F.GREEN}{args.output}{F.RESET}")
 
-    solver = FusionSolver(base_solver.__class__, -1) if not retry else RetrySolver(base_solver.__class__, -1)
+    solver = (
+        FusionSolver(base_solver.__class__, -1)
+        if not retry
+        else RetrySolver(base_solver.__class__, -1)
+    )
 
     # Anytime solving
     def save_result_pre_emptively():
