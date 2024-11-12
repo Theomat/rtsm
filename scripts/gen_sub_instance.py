@@ -10,11 +10,10 @@ if __name__ == "__main__":
 
     F = get_color_helper()
 
-    from rtsm.helper import get_predictors, get_data_loaders, try_load_instance
+    from rtsm.helper import get_data_loaders, try_load_instance
 
     # Data Loaders
     data_loaders, supported_extensions = get_data_loaders()
-    predictors = get_predictors()
 
     parser = argparse.ArgumentParser(
         description="Sample a sub instance of an instance",
@@ -67,7 +66,7 @@ if __name__ == "__main__":
         size=int(len(swapped_instance.tests) * fraction),
         replace=False,
     )
-    sub_swapped_instance = swapped_instance.subset(selected_variants)
+    sub_swapped_instance = swapped_instance.subset(list(selected_variants))
     sub_instance = sub_swapped_instance.swap()
     # Now we need to save sub_isntance
     with open(dst, "w") as fd:
