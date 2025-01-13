@@ -84,6 +84,8 @@ class WeightedPredictor(Predictor):
     def can_predict(self, usable: Tuple[bool, ...]) -> bool:
         mask = np.asarray(usable)
         X = self.Xt[:, :, mask]
+        if X.shape[-1] <= 1:
+            return True
         for h in range(X.shape[0]):
             # D has shape (variants,)
             D = np.add.reduce(X[h], axis=-1)
