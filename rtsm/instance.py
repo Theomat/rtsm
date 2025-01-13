@@ -14,6 +14,7 @@ class Instance:
     variants: List[str]
     tests: List[str]
     performance_matrix: np.ndarray = field(default_factory=lambda: np.zeros((1,)))
+    weights: np.ndarray = field(default_factory=lambda: np.zeros((1,)))
     """Matrix (performance, variant, test)"""
     __check: Optional[np.ndarray] = field(
         default=None, compare=False, repr=False, hash=False
@@ -26,6 +27,7 @@ class Instance:
         self.performance_matrix = np.zeros(
             (len(self.performances), len(self.variants), len(self.tests))
         )
+        self.weights = np.zeros((len(self.performances), len(self.tests)))
         self.__check = np.zeros_like(self.performance_matrix)
 
     def copy(self) -> "Instance":
@@ -34,6 +36,7 @@ class Instance:
         """
         i = Instance(self.variants, self.tests)
         i.performance_matrix = self.performance_matrix
+        i.weights = self.weights
         i.__check = self.__check
         i.__warm_start = self.__warm_start
         return i
@@ -125,8 +128,9 @@ class Instance:
         vi = self.variants.index(variant) if isinstance(variant, str) else variant
         ti = self.tests.index(test) if isinstance(test, str) else test
         self.performance_matrix[pi, vi, ti] = value
-        if self.__check is not None:
+        if self.__check is not None and self.__check[pi, vi, ti] <= 0:
             self.__check[pi, vi, ti] = 1
+            self.weights[pi, ti] += value
 
     def check_filled(self) -> bool:
         """
@@ -138,6 +142,7 @@ class Instance:
         filled = total >= 1
         if filled:
             self.__check = None
+            self.weights = np.exp(-self.weights) / np.sum(np.exp(-self.weights))
         return filled
 
     def get_tests(self, sol: Tuple[bool, ...]) -> List[str]:
