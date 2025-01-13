@@ -11,7 +11,7 @@ from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
 from rtsm.predictors.no_predictor import NoPredictor
 from rtsm.predictors.logistic_boolean_predictor import LogisticBooleanPredictor
-from rtsm.predictors.linear_predictor import LinearRegressionPredictor
+from rtsm.predictors.weighted_predictor import WeightedPredictor
 from rtsm.solvers.bisect_solver import BisectSolver
 from rtsm.solvers.greedy_solver import GreedySolver
 from rtsm.solvers.pca_solver import PCASolver
@@ -50,16 +50,14 @@ def get_predictors() -> Dict[str, Callable[[Instance], Predictor]]:
     def adaptative_predictor(inst: Instance, **kwargs) -> Predictor:
         if np.unique(inst.performance_matrix).shape[0] == 2:
             return LogisticBooleanPredictor(inst, **kwargs)
-        return LinearRegressionPredictor(inst, **kwargs)
+        return WeightedPredictor(inst, **kwargs)
 
     return {
         "auto": adaptative_predictor,
         "none": NoPredictor,
         "logistic-bool": LogisticBooleanPredictor,
-        "linear": LinearRegressionPredictor,
-        "linear+": lambda x, **kwargs: LinearRegressionPredictor(
-            x, positive=True, **kwargs
-        ),
+        "weighted": WeightedPredictor,
+        "weighted+": lambda x, **kwargs: WeightedPredictor(x, positive=True, **kwargs),
     }
 
 
