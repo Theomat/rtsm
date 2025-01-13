@@ -61,33 +61,38 @@ class SplitRetry:
     def smallest_partition(self) -> int:
         return min(len(p) for p in self.partitions.values())
 
-    def is_done(self) -> bool:
+    def is_done(self) -> Tuple[bool, bool]:
+        """
+        Return (done, has_started_a_new_try)
+        """
         if len(self.queue) == 0:
             self.__update_merge_queue__()
             if len(self.queue) > 0:
-                return False
+                return False, False
             if len(self.merge_queue) <= 1:
                 if self.t > 0:
                     one_sol = list(self.get_solutions())[0].tests
                     self.instance.set_start(one_sol)
                     self.__new_try__()
-                    return False
-                return True
+                    return False, True
+                return True, False
             else:
-                return False
-        return False
+                return False, False
+        return False, False
 
     def next_instance(self) -> Tuple[int, Instance]:
         return self.queue.pop(0)
 
     def __accept_one__(
-        self, sols: Set[Solution], old_sols: Set[int]
+        self, sols: Set[Solution], old_dependencies: Set[int]
     ) -> Tuple[bool, List[str]]:
         # If no progress was made
-        if len(list(sols)[0].tests) == sum(len(self.solutions[x]) for x in old_sols):
+        if len(list(sols)[0].tests) == sum(
+            len(self.solutions[x]) for x in old_dependencies
+        ):
             return True, list(sols)[0].tests
         new_partition = []
-        for x in old_sols:
+        for x in old_dependencies:
             new_partition += self.partitions[x]
         new_inst = self.instance.subset(new_partition)
         predictor = self.predictor_builder(new_inst)
@@ -130,7 +135,7 @@ class SplitRetry:
                 return False
         else:
             solution = list(sols)[0].tests
-
+            assert False, f"{data} \n\nDEPS:\n\t{self.dependencies}"
         # Update dict
         new_partition = []
         for x in self.dependencies[id]:
@@ -202,7 +207,13 @@ class RetrySolver(Solver):
         if nprocs > 1:
             pool = ProcessPoolExecutor(nprocs)
             futures = []
-            while not self.split_manager.is_done():
+            is_done = self.split_manager.is_done()[0]
+            has_restarted = False
+            while not is_done:
+                if has_restarted:
+                    for future in futures:
+                        future.cancel()
+                    futures.clear()
                 while len(futures) < nprocs and self.split_manager.has_next():
                     (id, sub_instance) = self.split_manager.next_instance()
                     futures.append(
@@ -229,10 +240,11 @@ class RetrySolver(Solver):
                             on_progress_callback(self.split_manager.get_solutions())
                 score = self.split_manager.current_best_score()
                 pbar.set_best(score, score / n)
+                is_done, has_restarted = self.split_manager.is_done()
             pool.shutdown()
         else:
             sub_solver = self.solver_builder()
-            while not self.split_manager.is_done():
+            while not self.split_manager.is_done()[0]:
                 (id, sub_instance) = self.split_manager.next_instance()
                 out = sub_solver.solve(
                     sub_instance,
