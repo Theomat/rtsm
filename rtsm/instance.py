@@ -15,6 +15,7 @@ class Instance:
     tests: List[str]
     performance_matrix: np.ndarray = field(default_factory=lambda: np.zeros((1,)))
     weights: np.ndarray = field(default_factory=lambda: np.zeros((1,)))
+    costs: np.ndarray = field(default_factory=lambda: np.zeros((1,)))
     """Matrix (performance, variant, test)"""
     __check: Optional[np.ndarray] = field(
         default=None, compare=False, repr=False, hash=False
@@ -27,7 +28,8 @@ class Instance:
         self.performance_matrix = np.zeros(
             (len(self.performances), len(self.variants), len(self.tests))
         )
-        self.weights = np.zeros((len(self.performances), len(self.tests)))
+        self.weights = np.zeros((len(self.tests),))
+        self.costs = np.zeros((len(self.tests),))
         self.__check = np.zeros_like(self.performance_matrix)
 
     def copy(self) -> "Instance":
@@ -37,6 +39,7 @@ class Instance:
         i = Instance(self.variants, self.tests)
         i.performance_matrix = self.performance_matrix
         i.weights = self.weights
+        i.costs = self.costs
         i.__check = self.__check
         i.__warm_start = self.__warm_start
         return i
@@ -74,13 +77,16 @@ class Instance:
         Returns the instance where only the selected subset of tests are kept.
         """
         index2test = {self.tests.index(t): t for t in selected_tests}
-        instance = Instance(self.performances, self.variants, selected_tests[:])
+        sorted_tests = [index2test[i] for i in sorted(index2test.keys())]
+        instance = Instance(self.performances, self.variants, sorted_tests)
         for h, performance in enumerate(self.performances):
             for i, variant in enumerate(self.variants):
                 for index, test in index2test.items():
                     instance.store_performance(
                         h, i, test, self.performance_matrix[h, i, index]
                     )
+        # mask = [t in selected_tests for t in self.tests]
+        # assert np.allclose(self.performance_matrix[:, :, mask], instance.performance_matrix)
         if self.__warm_start is not None:
             start = [t for t, b in zip(self.tests, self.warm_start()) if b]
             instance.set_start(start)
@@ -130,7 +136,14 @@ class Instance:
         self.performance_matrix[pi, vi, ti] = value
         if self.__check is not None and self.__check[pi, vi, ti] <= 0:
             self.__check[pi, vi, ti] = 1
-            self.weights[pi, ti] += value
+
+    def store_cost(
+        self,
+        test: Union[str, int],
+        value: float,
+    ):
+        ti = self.tests.index(test) if isinstance(test, str) else test
+        self.costs[ti] = value
 
     def check_filled(self) -> bool:
         """
@@ -142,7 +155,7 @@ class Instance:
         filled = total >= 1
         if filled:
             self.__check = None
-            self.weights = np.exp(-self.weights) / np.sum(np.exp(-self.weights))
+            self.weights = np.exp(-self.costs) / np.sum(np.exp(-self.costs))
         return filled
 
     def get_tests(self, sol: Tuple[bool, ...]) -> List[str]:
