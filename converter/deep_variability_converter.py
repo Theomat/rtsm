@@ -56,7 +56,7 @@ def load_data(path: str):
     return perf_matrix
 
 
-def save_for_metric(df: pd.DataFrame, metrics: List[str]):
+def save_for_metric(df: pd.DataFrame, metrics: List[str], cost: str):
     allowed = df.columns.to_list()
     allowed.remove("configurationID")
     allowed.remove("inputname")
@@ -64,7 +64,10 @@ def save_for_metric(df: pd.DataFrame, metrics: List[str]):
         metric in allowed for metric in metrics
     ), f"Invalid metric, allowed metrics are: {', '.join(allowed)}"
 
-    filename: str = f"./{name}_{'_'.join(metrics)}.csv"
+    if len(cost) > 0:
+        filename: str = f"./{name}_{'_'.join(metrics)}_cost_{cost}.csv"
+    else:
+        filename: str = f"./{name}_{'_'.join(metrics)}.csv"
     df = df[["configurationID", "inputname"] + metrics]
     df = df.rename(
         columns={
@@ -73,6 +76,15 @@ def save_for_metric(df: pd.DataFrame, metrics: List[str]):
         }
     )
     df.to_csv(filename, index=False)
+    if len(cost) > 0:
+        with open(filename) as fd:
+            lines = fd.readlines()
+        costs = df.groupby("test")[cost].sum()
+        costs = costs.mul(1 / len(metrics))
+        costs.to_csv(filename, index=True)
+        with open(filename, "a+") as fd:
+            fd.write("=" * 80 + "\n")
+            fd.writelines(lines)
     print("Saved to", filename)
 
 
@@ -87,6 +99,9 @@ if __name__ == "__main__":
         type=str,
     )
     parser.add_argument(
+        "--cost", help="The cost metric to be used", type=str, default=""
+    )
+    parser.add_argument(
         "metrics",
         help="The performance metric to be used",
         nargs="+",
@@ -94,9 +109,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     folder: str = args.folder
+    cost: str = args.cost
 
     name: str = os.path.basename(folder)
     metrics: List[str] = args.metrics
 
     df = load_data(args.folder)
-    save_for_metric(df, metrics)
+    save_for_metric(df, metrics, cost)
