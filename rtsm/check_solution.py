@@ -109,13 +109,15 @@ if __name__ == "__main__":
 
     # Measure performance gains
     print("performance gains:")
-    one_sol
     my_sol = Solution(instance, tuple(one_sol))
     for perf, (val, total) in my_sol.measure_performances().items():
         print(
             f"\t{perf}: {F.GREEN}{val:.2}{F.RESET} / {F.CYAN}{total:.2}{F.RESET} ({F.GREEN}{val/total:.2%}{F.RESET})"
         )
-
+    print(
+        "cost:",
+        f"{F.GREEN}{my_sol.cost():.2}{F.RESET} / {F.CYAN}{np.sum(instance.costs):.2}{F.RESET} ({F.GREEN}{my_sol.cost()/np.sum(instance.costs):.2%}{F.RESET})",
+    )
     R = to_ranking(np.sum(instance.performance_matrix, axis=-1))
     ranks_original = to_ranks(R)
 
