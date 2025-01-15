@@ -176,8 +176,6 @@ if __name__ == "__main__":
                 },
                 fd,
             )
-        if verbose:
-            print(f"saved to {F.GREEN}{args.output}{F.RESET}")
 
     solver = (
         FusionSolver(base_solver.__class__, -1)
@@ -246,3 +244,5 @@ if __name__ == "__main__":
             )
     # Save solution
     save(solutions)
+    if verbose:
+        print(f"saved to {F.GREEN}{args.output}{F.RESET}")
