@@ -36,13 +36,8 @@ class WeightedPrediction(Prediction):
         self.b = b
 
     def predict(self, information: np.ndarray) -> np.ndarray:
-        # TODO: check if it does the right thing
-        p = self.A.shape[0]
-        n = self.A.shape[1]
-        variants = information.shape[1]
-        information = information.transpose((0, 1))
-        out = np.dot(self.A, information).reshape((p, n, variants)).transpose((0, 1))
-        out += self.b
+        mask = [t in self.inputs for t in self.outputs]
+        out = np.sum(information[:, :, mask], axis=1) * self.A + self.b
         return out
 
     def export(self, path: str) -> None:
@@ -72,7 +67,7 @@ class WeightedPredictor(Predictor):
         self.instance = instance
         self.Xt = instance.performance_matrix.copy()
         self.T = np.sum(self.Xt, axis=-1)
-        self.Rt = to_ranking(np.sum(self.Xt, axis=-1))
+        self.Rt = to_ranking(self.T)
         self.accuracy = accuracy
         self.positive = positive
 
@@ -107,10 +102,15 @@ class WeightedPredictor(Predictor):
     def export_prediction(self, usable: Tuple[bool]):
         mask = np.asarray(usable)
         X = self.Xt[:, :, mask]
-        coeffs = np.zeros((X.shape[0], self.T.shape[-1]))
-        intercepts = np.zeros((X.shape[0], self.T.shape[-1]))
+        coeffs = np.zeros(
+            (
+                X.shape[0],
+                X.shape[-1],
+            )
+        )
+        intercepts = np.zeros((X.shape[0],))
         for h in range(X.shape[0]):
-            coeff, intercept, _ = __learn_linear_model__(
+            coeff, intercept, __ = __learn_linear_model__(
                 X[h, :, :], self.T[h], self.positive
             )
             coeffs[h, :] = coeff
@@ -119,6 +119,6 @@ class WeightedPredictor(Predictor):
         return WeightedPrediction(
             self.instance.get_tests(usable),
             [t for t, b in zip(self.instance.tests, usable) if not b],
-            coeffs.transpose((0, 1)),
+            coeffs,
             intercepts,
         )
