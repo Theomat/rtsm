@@ -116,7 +116,7 @@ if __name__ == "__main__":
         )
     print(
         "cost:",
-        f"{F.GREEN}{my_sol.cost():.2}{F.RESET} / {F.CYAN}{np.sum(instance.costs):.2}{F.RESET} ({F.GREEN}{my_sol.cost()/np.sum(instance.costs):.2%}{F.RESET})",
+        f"{F.GREEN}{my_sol.cost():.2}{F.RESET} / {F.CYAN}{instance.total_cost():.2}{F.RESET} ({F.GREEN}{my_sol.cost()/instance.total_cost():.2%}{F.RESET})",
     )
     R = to_ranking(np.sum(instance.performance_matrix, axis=-1))
     ranks_original = to_ranks(R)
