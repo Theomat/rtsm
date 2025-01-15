@@ -32,6 +32,9 @@ class Instance:
         self.costs = np.zeros((len(self.tests),))
         self.__check = np.zeros_like(self.performance_matrix)
 
+    def total_cost(self) -> float:
+        return np.sum(self.costs)
+
     def copy(self) -> "Instance":
         """
         Makes a shallow copy of this instance.
@@ -85,6 +88,8 @@ class Instance:
                     instance.store_performance(
                         h, i, test, self.performance_matrix[h, i, index]
                     )
+        for index, test in index2test.items():
+            instance.store_cost(test, self.costs[index])
         # mask = [t in selected_tests for t in self.tests]
         # assert np.allclose(self.performance_matrix[:, :, mask], instance.performance_matrix)
         if self.__warm_start is not None:

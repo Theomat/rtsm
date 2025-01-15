@@ -15,11 +15,14 @@ class Solution:
     instance: Instance = field(hash=False)
     tests: Tuple[str]
 
-    def cost(self) -> int:
+    def cost(self) -> float:
         """
         Return the cost of this solution.
         """
-        return len(self.tests)
+        cost = 0
+        for test in self.tests:
+            cost += self.instance.costs[self.instance.tests.index(test)]
+        return cost
 
     def measure_performances(self) -> Dict[str, Tuple[float, float]]:
         mask = [t in self.tests for t in self.instance.tests]

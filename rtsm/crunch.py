@@ -242,7 +242,7 @@ if __name__ == "__main__":
                 f"found {F.GREEN}{len(solutions)}{F.RESET} solution{'s' if len(solutions) > 1 else ''}"
             )
             print(
-                f"the minimal cost solution found is {F.GREEN}{best_cost}{F.RESET} ({F.GREEN}{best_cost/ len(instance.tests):.1%}{F.RESET})"
+                f"the minimal cost solution found is {F.GREEN}{best_cost}{F.RESET} ({F.GREEN}{best_cost/ instance.total_cost():.1%}{F.RESET})"
             )
     # Save solution
     save(solutions)
