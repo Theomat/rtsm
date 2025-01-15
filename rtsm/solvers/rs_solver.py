@@ -6,7 +6,7 @@ import numpy as np
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
 from rtsm.solution import Solution
-from rtsm.solvers.solver import Solver
+from rtsm.solvers.solver import Solver, get_cost
 from rtsm.utils.color_helper import get_color_helper
 from rtsm.utils.progress_bar import ProgressBar
 
@@ -19,12 +19,13 @@ def __new_sol__(
     solutions: List[np.ndarray],
     pbar: ProgressBar,
     converter: Callable[[np.ndarray], Solution],
+    instance: Instance,
     on_progress_callback: Optional[Callable[[List[Solution]], None]] = None,
 ):
-    score = np.sum(sol)
+    score = get_cost(instance, sol)
     # print(score, current_best, sol, solutions)
     if score < current_best:
-        pbar.set_best(score, score / len(sol))
+        pbar.set_best(score, score / instance.total_cost())
         solutions.clear()
         solutions.append(sol)
         if on_progress_callback is not None:
@@ -86,11 +87,11 @@ class RandomSolutionSolver(Solver):
         n = len(instance.tests)
         init = np.asarray(instance.warm_start())
         self.best_sol = [init]
-        best_cost = np.sum(init)
+        best_cost = get_cost(instance, init)
         initial_cost = best_cost
         if verbose:
             print(
-                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_cost}{F.RESET} ({F.LIGHTCYAN_EX}{best_cost / len(init):.1%}{F.RESET})"
+                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_cost}{F.RESET} ({F.LIGHTCYAN_EX}{best_cost / instance.total_cost():.1%}{F.RESET})"
             )
 
         budget = samples

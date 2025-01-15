@@ -1,12 +1,20 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Optional, Set, Union
 
+import numpy as np
+
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
 from rtsm.solution import Solution
 from rtsm.utils.color_helper import get_color_helper
 
 F = get_color_helper()
+
+
+def get_cost(instance: Instance, other) -> float:
+    if isinstance(other, np.ndarray):
+        return np.sum(instance.costs[other])
+    return Solution(instance, other).cost()
 
 
 class Solver(ABC):

@@ -1,12 +1,12 @@
 from concurrent.futures import ProcessPoolExecutor, wait
-from typing import Callable, Generator, List, Optional, Set, Tuple, Union
+from typing import Callable, Generator, List, Optional, Set, Union
 
 import numpy as np
 
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
 from rtsm.solution import Solution
-from rtsm.solvers.solver import Solver
+from rtsm.solvers.solver import Solver, get_cost
 from rtsm.utils.color_helper import get_color_helper
 from rtsm.utils.progress_bar import ProgressBar
 
@@ -74,10 +74,11 @@ def __bisect__(
     Assume current is SAT
     """
     rng = np.random.default_rng(seed) if isinstance(seed, int) else seed
+    instance = predictor.instance
     while True:
-        min_score = np.sum(must_keep)
+        min_score = get_cost(instance, must_keep)
         # IF cannot remove element from current OR no better case than best so far
-        if min_score >= np.sum(current) or min_score >= best_so_far:
+        if min_score >= get_cost(instance, current) or min_score >= best_so_far:
             return current
         # Split current in 2
         li = list(__split__(current, must_keep, 2, rng))
@@ -102,10 +103,10 @@ def __bisect__(
             # then either we must keep all of a or all of b
             # So try to solve either problem and get the best solution
             sol_a = __bisect__(current.copy(), a, best_so_far, rng, predictor)
-            score_a = np.sum(sol_a)
+            score_a = get_cost(instance, sol_a)
             best_so_far = min(score_a, best_so_far)
             sol_b = __bisect__(current, b, best_so_far, rng, predictor)
-            score_b = np.sum(sol_b)
+            score_b = get_cost(instance, sol_b)
             if score_a < score_b:
                 sol = sol_a
             else:
@@ -123,7 +124,9 @@ def __improve_upon__(
     must_keep = np.asarray(
         [all(sol[i] for sol in sol_set) for i in range(len(one_sol))]
     )
-    return __bisect__(current, must_keep, np.sum(one_sol), seed, predictor)
+    return __bisect__(
+        current, must_keep, get_cost(predictor.instance, one_sol), seed, predictor
+    )
 
 
 def __new_sol__(
@@ -134,11 +137,12 @@ def __new_sol__(
     pbar: ProgressBar,
     try_improve: bool,
     converter: Callable[[np.ndarray], Solution],
+    instance: Instance,
     on_progress_callback: Optional[Callable[[Set[Solution]], None]] = None,
 ):
-    score = np.sum(sol)
+    score = get_cost(instance, sol)
     if score < current_best:
-        pbar.set_best(score, score / len(sol))
+        pbar.set_best(score, score / instance.total_cost())
         solutions.clear()
         solutions.append(sol)
         if on_progress_callback is not None:
@@ -187,13 +191,12 @@ class BisectSolver(Solver):
             else predictor_builder
         )
         self.instance = instance
-        n = len(instance.tests)
         init = np.asarray(instance.warm_start())
-        initial_best = np.sum(init)
+        initial_best = get_cost(instance, init)
         self.best_sol = [init]
         if verbose:
             print(
-                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{initial_best}{F.RESET} ({F.LIGHTCYAN_EX}{initial_best / len(init):.1%}{F.RESET})"
+                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{initial_best}{F.RESET} ({F.LIGHTCYAN_EX}{initial_best / instance.total_cost():.1%}{F.RESET})"
             )
         must_keep = np.copy(init)
         must_keep[:] = False
@@ -202,24 +205,21 @@ class BisectSolver(Solver):
         unfixed = len(must_keep) - n_kept - (len(init) - np.sum(init))
         if verbose:
             print(
-                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} top level:\n\tbest possible solution: {F.LIGHTCYAN_EX}{n_kept}{F.RESET} ({F.LIGHTCYAN_EX}{n_kept / initial_best:.1%}{F.RESET})\n\tnot fixed: {F.LIGHTCYAN_EX}{unfixed}{F.RESET} ({F.LIGHTCYAN_EX}{unfixed / initial_best:.1%}{F.RESET})"
+                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} top level:\n\tbest possible solution: {F.LIGHTCYAN_EX}{n_kept}{F.RESET} ({F.LIGHTCYAN_EX}{n_kept / initial_best:.1%}{F.RESET})\n\tnot fixed: {F.LIGHTCYAN_EX}{unfixed}{F.RESET} ({F.LIGHTCYAN_EX}{unfixed / np.sum(init):.1%}{F.RESET})"
             )
-        best_possible = max(n_kept, 1)
 
         def convert(array):
             return Solution(self.instance, tuple(self.instance.get_tests(array)))
 
         improvement_queue = []
         pbar = ProgressBar(total=samples, name=self.get_name(), use_tqdm=use_tqdm)
-        # if use_tqdm:
-        # pbar = tqdm.tqdm(total=samples, smoothing=0, dec=self._get_print_prefix_())
         if nprocs > 1:
             pool = ProcessPoolExecutor(nprocs)
             futures = []
             # Find best among possible children
             total_done = 0
             queued = seed or 0
-            while total_done < samples and initial_best > best_possible:
+            while total_done < samples:  # and  > best_possible:
                 while len(futures) < nprocs and queued < samples:
                     if improvement_queue:
                         futures.append(
@@ -255,6 +255,7 @@ class BisectSolver(Solver):
                         pbar,
                         self.try_improve,
                         convert,
+                        instance,
                         on_progress_callback,
                     )
                     pbar.update(1)
@@ -283,11 +284,12 @@ class BisectSolver(Solver):
                     pbar,
                     self.try_improve,
                     convert,
+                    instance,
                     on_progress_callback,
                 )
                 pbar.update(1)
-                if initial_best <= best_possible:
-                    break
+                # if initial_best <= best_possible:
+                #     break
         pbar.close()
         return self.__get_solutions__()
 

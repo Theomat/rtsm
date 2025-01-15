@@ -8,7 +8,7 @@ import numpy as np
 
 from rtsm.instance import Instance
 from rtsm.predictors.predictor import Predictor
-from rtsm.solvers.solver import Solver
+from rtsm.solvers.solver import Solver, get_cost
 from rtsm.solution import Solution
 from rtsm.utils.progress_bar import ProgressBar
 
@@ -87,8 +87,9 @@ class SplitRetry:
         self, sols: Set[Solution], old_dependencies: Set[int]
     ) -> Tuple[bool, List[str]]:
         # If no progress was made
-        if len(list(sols)[0].tests) == sum(
-            len(self.solutions[x]) for x in old_dependencies
+        new_cost = get_cost(self.instance, list(sols)[0].tests)
+        if new_cost >= sum(
+            get_cost(self.instance, self.solutions[x]) for x in old_dependencies
         ):
             return True, list(sols)[0].tests
         new_partition = []
@@ -150,7 +151,7 @@ class SplitRetry:
         return True
 
     def current_best_score(self) -> int:
-        return sum(len(sol) for sol in self.solutions.values())
+        return sum(get_cost(self.instance, sol) for sol in self.solutions.values())
 
     def get_solutions(self) -> Set[Solution]:
         out = []
@@ -184,7 +185,7 @@ class RetrySolver(Solver):
         **kwargs: Any,
     ) -> Set[Solution]:
         self.instance = instance
-        n = len(instance.tests)
+        total_cost = instance.total_cost()
         max_tries = 5
         self.split_manager = SplitRetry(
             instance, self.splits, seed, predictor_builder, max_tries
@@ -192,7 +193,7 @@ class RetrySolver(Solver):
         best_score = self.split_manager.current_best_score()
         if verbose:
             print(
-                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_score}{F.RESET} ({F.LIGHTCYAN_EX}{best_score/ len(instance.tests):.1%}{F.RESET})"
+                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_score}{F.RESET} ({F.LIGHTCYAN_EX}{best_score/ total_cost:.1%}{F.RESET})"
             )
         pbar = ProgressBar(
             total=(self.splits * 2 - 1) * max_tries,
@@ -239,7 +240,7 @@ class RetrySolver(Solver):
                         ):
                             on_progress_callback(self.split_manager.get_solutions())
                 score = self.split_manager.current_best_score()
-                pbar.set_best(score, score / n)
+                pbar.set_best(score, score / total_cost)
                 is_done, has_restarted = self.split_manager.is_done()
             pool.shutdown()
         else:
@@ -260,7 +261,7 @@ class RetrySolver(Solver):
                     ):
                         on_progress_callback(self.split_manager.get_solutions())
                 score = self.split_manager.current_best_score()
-                pbar.set_best(score, score / n)
+                pbar.set_best(score, score / total_cost)
         pbar.close()
         return self.__get_solutions__()
 
