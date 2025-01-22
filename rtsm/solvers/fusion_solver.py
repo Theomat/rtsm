@@ -109,15 +109,11 @@ class Fusion:
             self.id_generator += 1
 
             self.dependencies[new_id] = [a, b]
-
-            self.queue.append(
-                (
-                    new_id,
-                    self.instance.subset(
-                        list(self.solutions[a]) + list(self.solutions[b])
-                    ),
-                )
+            new_instance = self.instance.subset(
+                list(self.partitions[a]) + list(self.partitions[b])
             )
+            new_instance.set_start(list(self.solutions[a]) + list(self.solutions[b]))
+            self.queue.append((new_id, new_instance))
 
     def feed(self, data: Tuple[int, Set[Solution]]) -> bool:
         id, sols = data
