@@ -34,12 +34,16 @@ def from_scenario(scenario: ASlibScenario) -> Dict[str, Dict[str, float]]:
 name = os.path.basename(scenario.dir_)
 data = from_scenario(scenario)
 variants = scenario.performance_data.columns
-for variant in variants:
-    with open(f"./{name}_without_{variant}.csv", "w") as fd:
-        writer = csv.writer(fd)
-        writer.writerow(["variant", "test", "performance"])
-        for test, val in data.items():
-            for v, score in val.items():
-                if v == variant:
-                    continue
-                writer.writerow([v, test, float(score)])
+with open(f"./{name}_cost.csv", "w") as fd:
+    writer = csv.writer(fd)
+    writer.writerow(["test", "cost"])
+    for test, val in data.items():
+        cost = 0
+        for v, score in val.items():
+            cost += float(score)
+        writer.writerow([test, cost])
+    writer.writerow(["=" * 80])
+    writer.writerow(["variant", "test", "performance"])
+    for test, val in data.items():
+        for v, score in val.items():
+            writer.writerow([v, test, float(score)])
