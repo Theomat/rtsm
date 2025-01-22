@@ -54,7 +54,7 @@ def accuracy_error2d(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
 
 def kendall(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
     """
-    Return kendall's coefficient
+    Return 1 - kendall's coefficient
     """
     num = np.max(np.add.reduce(target_ranks != pred_ranks, axis=(1, 2)))
     n = target_ranks.shape[1]
@@ -64,7 +64,7 @@ def kendall(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
 
 def kendall2d(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
     """
-    Return kendall's coefficient
+    Return 1 - kendall's coefficient
     """
     num = np.max(np.add.reduce(target_ranks != pred_ranks, axis=(0, 1)))
     n = target_ranks.shape[1]
