@@ -88,7 +88,7 @@ class RandomSolutionSolver(Solver):
         init = np.asarray(instance.warm_start())
         self.best_sol = [init]
         best_cost = get_cost(instance, init)
-        initial_cost = best_cost
+        initial_size = np.sum(init)
         if verbose:
             print(
                 f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_cost}{F.RESET} ({F.LIGHTCYAN_EX}{best_cost / instance.total_cost():.1%}{F.RESET})"
@@ -110,7 +110,7 @@ class RandomSolutionSolver(Solver):
                     futures.append(
                         pool.submit(
                             __sample__,
-                            initial_cost - 1,
+                            initial_size - 1,
                             n,
                             predictor,
                             queued,
@@ -132,14 +132,16 @@ class RandomSolutionSolver(Solver):
                         self.best_sol,
                         pbar,
                         convert,
+                        instance,
                         on_progress_callback,
                     )
+                    initial_size -= 1
             pool.shutdown()
 
         else:
             while budget > 0 and best_cost > 1:
                 has_found, used, out = __sample__(
-                    initial_cost - 1,
+                    initial_size - 1,
                     n,
                     predictor,
                     (seed or 0) + budget,
@@ -150,8 +152,15 @@ class RandomSolutionSolver(Solver):
                 if not has_found:
                     continue
                 best_cost = __new_sol__(
-                    out, best_cost, self.best_sol, pbar, convert, on_progress_callback
+                    out,
+                    best_cost,
+                    self.best_sol,
+                    pbar,
+                    convert,
+                    instance,
+                    on_progress_callback,
                 )
+                initial_size -= 1
         pbar.close()
 
         return self.__get_solutions__()
