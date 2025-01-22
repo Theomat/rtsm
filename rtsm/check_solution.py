@@ -132,8 +132,8 @@ if __name__ == "__main__":
     sR = to_ranking(np.sum(instance.subset(one_sol).performance_matrix, axis=-1))
     ranks_no_pred = to_ranks(sR)
     print("without prediction:")
-    print(f"\taccuracy error: {F.GREEN}{accuracy_error(R, sR):.2%}{F.RESET}")
-    print(f"\tKendall coefficient: {F.GREEN}{kendall(R, sR):.2%}{F.RESET}")
+    print(f"\taccuracy: {F.GREEN}{1-accuracy_error(R, sR):.2%}{F.RESET}")
+    print(f"\tKendall coefficient: {F.GREEN}{kendall(R, sR):.2}{F.RESET}")
 
     def spearman_to_str(rankA, rankB):
         out = []
@@ -155,8 +155,8 @@ if __name__ == "__main__":
     error = accuracy_error(R, ranking_pred)
     ranks_pred = to_ranks(ranking_pred)
     print(f"({F.LIGHTYELLOW_EX}{duration:.2f}{F.RESET}s):")
-    print(f"\taccuracy error: {F.GREEN}{error:.2%}{F.RESET}")
-    print(f"\tKendall coefficient: {F.GREEN}{kendall(R, ranking_pred):.2%}{F.RESET}")
+    print(f"\taccuracy: {F.GREEN}{1-error:.2%}{F.RESET}")
+    print(f"\tKendall coefficient: {F.GREEN}{1-kendall(R, ranking_pred):.2}{F.RESET}")
 
     spearman_desc = spearman_to_str(ranks_original, ranks_pred)
     print(f"\tSpearman: {spearman_desc}")
@@ -185,7 +185,7 @@ if __name__ == "__main__":
         Rpred = to_ranking(np.sum(copy, axis=-1))
         ranks_pred = to_ranks(Rpred)
         error = accuracy_error(R, Rpred)
-        print(f"\taccuracy error: {F.GREEN}{error:.2%}{F.RESET}")
-        print(f"\tKendall coefficient: {F.GREEN}{kendall(R, Rpred):.2%}{F.RESET}")
+        print(f"\taccuracy: {F.GREEN}{1-error:.2%}{F.RESET}")
+        print(f"\tKendall coefficient: {F.GREEN}{1-kendall(R, Rpred):.2}{F.RESET}")
         spearman_desc = spearman_to_str(ranks_original, ranks_pred)
         print(f"\tSpearman: {spearman_desc}")
