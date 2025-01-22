@@ -76,12 +76,8 @@ class Fusion:
         self, sols: Set[Solution], old_dependencies: Set[int]
     ) -> List[str]:
         # If no progress was made
-        old_cost = sum(
-            get_cost(self.instance, self.solutions[x]) for x in old_dependencies
-        )
-        valid_sols = [
-            sol for sol in sols if get_cost(self.instance, sol.tests) < old_cost
-        ]
+        old_cost = sum(self.scores[x] for x in old_dependencies)
+        valid_sols = [sol for sol in sols if sol.cost() < old_cost]
         if len(valid_sols) == 0:
             old_sol = []
             for x in old_dependencies:
