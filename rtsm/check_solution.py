@@ -142,7 +142,7 @@ if __name__ == "__main__":
     print("with prediction:")
 
     start = time.perf_counter()
-    mask = [x in one_sol for x in instance.tests]
+    mask = my_sol.to_mask()
     ranking_pred = predictor.get_ranking(mask)
     duration = time.perf_counter() - start
     error = ranking_error(R, ranking_pred)
