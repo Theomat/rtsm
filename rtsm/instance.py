@@ -20,8 +20,8 @@ class Instance:
     __check: Optional[np.ndarray] = field(
         default=None, compare=False, repr=False, hash=False
     )
-    __warm_start: Optional[Tuple[bool, ...]] = field(
-        default=None, compare=False, repr=False, hash=False
+    __warm_start: np.ndarray = field(
+        default_factory=lambda: np.ones((1,)), compare=False, repr=False, hash=False
     )
 
     def __post_init__(self):
@@ -34,6 +34,8 @@ class Instance:
         self.weights = np.zeros((len(self.tests),))
         self.costs = np.zeros((len(self.tests),))
         self.__check = np.zeros_like(self.performance_matrix)
+        if self.__warm_start.shape[0] != len(self.tests):
+            self.__warm_start = np.array([True for _ in self.tests])
 
     def total_cost(self) -> float:
         return np.sum(self.costs)
@@ -54,15 +56,13 @@ class Instance:
         """
         Set the initial start of this instance to the selected subset of tests.
         """
-        self.__warm_start = tuple(t in tests for t in self.tests)
+        self.__warm_start = np.array([t in tests for t in self.tests])
 
     def warm_start(self) -> Tuple[bool, ...]:
         """
         Gives an initial start to solve this instance.
         It is guaranteed that the warm start satisfies the solving constraints.
         """
-        if self.__warm_start is None:
-            self.__warm_start = tuple(True for _ in range(len(self.tests)))
         return self.__warm_start
 
     def swap(self) -> "Instance":
