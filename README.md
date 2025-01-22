@@ -63,6 +63,9 @@ Now this instance is quite easy and has few tests that can actually be removed.
 
 ### Multiprocessing
 
+**Warning**: Multiprocessing kills reproducibility of results, since sub-task ordering is not guaranteed to be the same across runs and new subtasks depend on previous results then changing the execution order changes final results.
+
+
 The ``SAT20-MAIN.csv`` contains 400 tests with none that can be at first glance deemed necessary making it a much harder problem so we will use multiple CPUs:
 
 ```bash
@@ -84,10 +87,10 @@ python -m rtsm.crunch ./examples/SAT20-MAIN.csv  -p 8 --start my_solution.json
 
 ### Export your prediction model
 
-Let us say now that we have a solution that we got with the ``linear+`` predictor model and we would like to export the prediction model to use it elsewhere then we can do:
+Let us say now that we have a solution and we would like to export the prediction model to use it elsewhere then we can do:
 
 ```bash
-python -m rtsm.export ./examples/x264_etime.csv my_solution.json --predictor "linear+" -o dst.json
+python -m rtsm.export ./examples/x264_etime.csv my_solution.json  -o dst.json
 ```
 
 ### Multi performance metrics
@@ -107,8 +110,9 @@ There is a GA solver, which is available only if [PyGAD](https://pygad.readthedo
 There are two required columns in your CSV, one entitled ``variant`` and one entitled ``test``, every other column is considered as a different performance metric.
 Both columns ``variant`` and ``test`` are considered as ``strings`` wherease all other columns are considered as ``float``.
 
-See ``examples/x264_kbs_etime.csv`` for an example file that contains two different performance metrics.
+You can prefix the CSV file by another CSV file which maps each `test` to a `cost` and then produce a line of 80 `=` in which cas RTSM will try to minimise the cost and not the size of the benchmark.
 
+See ``examples/x264_kbs_etime.csv`` for an example file that contains two different performance metrics.
 
 ## Citing
 
