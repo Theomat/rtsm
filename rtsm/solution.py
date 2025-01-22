@@ -37,7 +37,7 @@ class Solution:
         }
 
     def to_mask(self) -> np.ndarray:
-        if len(self.__mask) != len(self.tests):
+        if len(self.__mask) != len(self.instance.tests):
             self.__mask = np.array([t in self.tests for t in self.instance.tests])
         return self.__mask
 
