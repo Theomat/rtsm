@@ -82,22 +82,13 @@ class Instance:
         """
         Returns the instance where only the selected subset of tests are kept.
         """
-        index2test = {self.tests.index(t): t for t in selected_tests}
-        sorted_tests = [index2test[i] for i in sorted(index2test.keys())]
-        instance = Instance(self.performances, self.variants, sorted_tests)
-        for h, performance in enumerate(self.performances):
-            for i, variant in enumerate(self.variants):
-                for index, test in index2test.items():
-                    instance.store_performance(
-                        h, i, test, self.performance_matrix[h, i, index]
-                    )
-        for index, test in index2test.items():
-            instance.store_cost(test, self.costs[index])
-        # mask = [t in selected_tests for t in self.tests]
-        # assert np.allclose(self.performance_matrix[:, :, mask], instance.performance_matrix)
-        if self.__warm_start is not None:
-            start = [t for t, b in zip(self.tests, self.warm_start()) if b]
-            instance.set_start(start)
+        instance = Instance(self.performances, self.variants, selected_tests)
+        mask = np.array([x in selected_tests for x in self.tests])
+        instance.performance_matrix[:, :, :] = self.performance_matrix[:, :, mask]
+        instance.__check[:, :, :] = 1
+        instance.costs[:] = self.costs[mask]
+        instance.__warm_start[:] = self.__warm_start[mask]
+        instance.check_filled()
         return instance
 
     def split(self, n: int, seed: Optional[int] = None) -> List["Instance"]:
@@ -171,3 +162,6 @@ class Instance:
         Convert a boolean tuple mask into the list of selected tests.
         """
         return [test for accept, test in zip(sol, self.tests) if accept]
+
+    def save(self, file: str) -> None:
+        np.save(file, self.performance_matrix)
