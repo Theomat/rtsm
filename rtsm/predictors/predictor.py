@@ -25,6 +25,14 @@ def to_ranking1d(perfs: np.ndarray) -> np.ndarray:
 
 
 def ranking_error(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
+    return kendall(target_ranks, pred_ranks)
+
+
+def ranking_error2d(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
+    return kendall2d(target_ranks, pred_ranks)
+
+
+def accuracy_error(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
     """
     Takes two ranking matrices and returns the percentage of errors.
     The percentage of errors is percentage of order relations that were different.
@@ -34,7 +42,7 @@ def ranking_error(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
     return num / (np.prod(target_ranks.shape[1:]) - n)
 
 
-def ranking_error2d(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
+def accuracy_error2d(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
     """
     Takes two ranking matrices and returns the percentage of errors.
     The percentage of errors is percentage of order relations that were different.
@@ -42,6 +50,26 @@ def ranking_error2d(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
     num = np.add.reduce(target_ranks != pred_ranks, axis=(0, 1))
     n = target_ranks.shape[1]
     return num / (np.prod(target_ranks.shape) - n)
+
+
+def kendall(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
+    """
+    Return kendall's coefficient
+    """
+    num = np.max(np.add.reduce(target_ranks != pred_ranks, axis=(1, 2)))
+    n = target_ranks.shape[1]
+    total = np.prod(target_ranks.shape[1:]) - n
+    return 1 - (total - 2 * num) / total
+
+
+def kendall2d(target_ranks: np.ndarray, pred_ranks: np.ndarray) -> float:
+    """
+    Return kendall's coefficient
+    """
+    num = np.max(np.add.reduce(target_ranks != pred_ranks, axis=(0, 1)))
+    n = target_ranks.shape[1]
+    total = np.prod(target_ranks.shape) - n
+    return 1 - (total - 2 * num) / total
 
 
 def to_ranks(ranking_matrix: np.ndarray) -> np.ndarray:
