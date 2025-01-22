@@ -52,6 +52,9 @@ class SplitRetry:
         self.partitions = {i: v.tests[:] for i, v in enumerate(instances)}
         self.queue = [(k, v) for k, v in enumerate(instances)]
         self.dependencies = {i: [i] for i in range(len(instances))}
+        self.scores = {
+            i: get_cost(instances[i], self.solutions[i]) for i in range(len(instances))
+        }
         self.merge_queue = []
         self.id_generator = len(self.solutions)
 
@@ -87,24 +90,30 @@ class SplitRetry:
         self, sols: Set[Solution], old_dependencies: Set[int]
     ) -> Tuple[bool, List[str]]:
         # If no progress was made
-        new_cost = get_cost(self.instance, list(sols)[0].tests)
-        if new_cost >= sum(
+        old_cost = sum(
             get_cost(self.instance, self.solutions[x]) for x in old_dependencies
-        ):
-            return True, list(sols)[0].tests
-        new_partition = []
-        for x in old_dependencies:
-            new_partition += self.partitions[x]
-        new_inst = self.instance.subset(new_partition)
-        predictor = self.predictor_builder(new_inst)
-        for sol in sols:
-            solution = sol.tests
-            # Now we need to check that it works
-            if predictor.can_predict(
-                np.asarray([t in solution for t in new_inst.tests])
-            ):
-                return True, solution
-        return False, []
+        )
+        valid_sols = [
+            sol for sol in sols if get_cost(self.instance, sol.tests) < old_cost
+        ]
+        if len(valid_sols) == 0:
+            old_sol = []
+            for x in old_dependencies:
+                old_sol += self.solutions[x]
+            return True, old_sol
+        else:
+            new_partition = []
+            for x in old_dependencies:
+                new_partition += self.partitions[x]
+            new_inst = self.instance.subset(new_partition)
+            predictor = self.predictor_builder(new_inst)
+            for sol in valid_sols:
+                # Now we need to check that it works
+                if predictor.can_predict(
+                    np.asarray([t in sol.tests for t in new_inst.tests])
+                ):
+                    return True, sol.tests
+            return False, []
 
     def __update_merge_queue__(self) -> None:
         self.rng.shuffle(self.merge_queue)
@@ -141,17 +150,19 @@ class SplitRetry:
         new_partition = []
         for x in self.dependencies[id]:
             del self.solutions[x]
+            del self.scores[x]
             new_partition += self.partitions[x]
             del self.partitions[x]
         del self.dependencies[id]
         self.partitions[id] = new_partition
         self.solutions[id] = solution
+        self.scores[id] = get_cost(self.instance, solution)
 
         self.merge_queue.append(id)
         return True
 
     def current_best_score(self) -> int:
-        return sum(get_cost(self.instance, sol) for sol in self.solutions.values())
+        return sum(s for s in self.scores.values())
 
     def get_solutions(self) -> Set[Solution]:
         out = []
