@@ -232,9 +232,6 @@ if __name__ == "__main__":
                 if len(one_sol.tests) == 1:
                     break
                 solver = base_solver
-
-        else:
-            break
     if not no_autosave:
         atexit.unregister(save_result_pre_emptively)
     if verbose:
