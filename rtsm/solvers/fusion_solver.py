@@ -75,7 +75,7 @@ class SplitManager:
     def __accept_one__(
         self, sols: Set[Solution], old_dependencies: Set[int]
     ) -> Tuple[bool, List[str]]:
-        new_cost = get_cost(self.instance, list(sols)[0].tests)
+        new_cost = get_cost(self.instance, list(sols)[0].to_mask())
         if new_cost >= sum(
             get_cost(self.instance, self.solutions[x]) for x in old_dependencies
         ):
