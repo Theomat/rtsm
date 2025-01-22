@@ -203,6 +203,7 @@ class BisectSolver(Solver):
         __find_necessary__(init, must_keep, predictor)
         n_kept = np.sum(must_keep)
         unfixed = len(must_keep) - n_kept - (len(init) - np.sum(init))
+        best_possible = n_kept - unfixed
         if verbose:
             print(
                 f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} top level:\n\tbest possible solution: {F.LIGHTCYAN_EX}{n_kept}{F.RESET} ({F.LIGHTCYAN_EX}{n_kept / initial_best:.1%}{F.RESET})\n\tnot fixed: {F.LIGHTCYAN_EX}{unfixed}{F.RESET} ({F.LIGHTCYAN_EX}{unfixed / np.sum(init):.1%}{F.RESET})"
@@ -219,7 +220,7 @@ class BisectSolver(Solver):
             # Find best among possible children
             total_done = 0
             queued = seed or 0
-            while total_done < samples:  # and  > best_possible:
+            while total_done < samples and np.sum(self.best_sol[0]) > best_possible:
                 while len(futures) < nprocs and queued < samples:
                     if improvement_queue:
                         futures.append(
@@ -288,8 +289,8 @@ class BisectSolver(Solver):
                     on_progress_callback,
                 )
                 pbar.update(1)
-                # if initial_best <= best_possible:
-                #     break
+                if np.sum(self.best_sol[0]) <= best_possible:
+                    break
         pbar.close()
         return self.__get_solutions__()
 
