@@ -14,7 +14,6 @@ class Instance:
     variants: List[str]
     tests: List[str]
     performance_matrix: np.ndarray = field(default_factory=lambda: np.zeros((1,)))
-    weights: np.ndarray = field(default_factory=lambda: np.zeros((1,)))
     costs: np.ndarray = field(default_factory=lambda: np.zeros((1,)))
     """Matrix (performance, variant, test)"""
     __check: Optional[np.ndarray] = field(
@@ -31,7 +30,6 @@ class Instance:
         self.performance_matrix = np.zeros(
             (len(self.performances), len(self.variants), len(self.tests))
         )
-        self.weights = np.zeros((len(self.tests),))
         self.costs = np.zeros((len(self.tests),))
         self.__check = np.zeros_like(self.performance_matrix)
         if self.__warm_start.shape[0] != len(self.tests):
@@ -46,7 +44,6 @@ class Instance:
         """
         i = Instance(self.variants, self.tests)
         i.performance_matrix = self.performance_matrix
-        i.weights = self.weights
         i.costs = self.costs
         i.__check = self.__check
         i.__warm_start = self.__warm_start
@@ -85,10 +82,9 @@ class Instance:
         instance = Instance(self.performances, self.variants, selected_tests)
         mask = np.array([x in selected_tests for x in self.tests])
         instance.performance_matrix[:, :, :] = self.performance_matrix[:, :, mask]
-        instance.__check[:, :, :] = 1
+        instance.__check = None
         instance.costs[:] = self.costs[mask]
         instance.__warm_start[:] = self.__warm_start[mask]
-        instance.check_filled()
         return instance
 
     def split(self, n: int, seed: Optional[int] = None) -> List["Instance"]:
@@ -154,7 +150,6 @@ class Instance:
         filled = total >= 1
         if filled:
             self.__check = None
-            self.weights = np.exp(-self.costs) / np.sum(np.exp(-self.costs))
         return filled
 
     def get_tests(self, sol: Tuple[bool, ...]) -> List[str]:
