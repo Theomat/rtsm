@@ -24,47 +24,47 @@ def __solve__(
     return id, sub_solver.solve(sub_instance, predictor, use_tqdm, **kwargs)
 
 
-class SplitManager:
+class Fusion:
     def __init__(
         self,
         instance: Instance,
         splits: int,
         seed: Optional[int],
         predictor_builder: Callable[[Instance], Predictor],
-        max_tries: int,
     ) -> None:
         self.predictor_builder = predictor_builder
         self.instance = instance
-        instances = instance.split(splits, seed=seed)
-        self.rng = random.Random(seed)
+        self.splits = splits
+        self.seed = seed
+        self.rng = random.Random(
+            seed
+        )  # not numpy since we want to use it to shuffle a queue
+        instances = self.instance.split(self.splits, seed=(self.seed or 0))
         self.solutions = {
             i: v.get_tests(v.warm_start()) for i, v in enumerate(instances)
         }
         self.partitions = {i: v.tests[:] for i, v in enumerate(instances)}
         self.queue = [(k, v) for k, v in enumerate(instances)]
-        self.tries = {i: 0 for i in range(len(instances))}
-        self.max_tries = max_tries
         self.dependencies = {i: [i] for i in range(len(instances))}
+        self.scores = {
+            i: get_cost(instances[i], self.solutions[i]) for i in range(len(instances))
+        }
         self.merge_queue = []
         self.id_generator = len(self.solutions)
 
     def has_next(self) -> bool:
         return len(self.queue) > 0
 
-    def smallest_partition(self) -> int:
-        return min(len(p) for p in self.partitions.values())
-
     def is_done(self) -> bool:
+        """
+        Return done
+        """
         if len(self.queue) == 0:
             self.__update_merge_queue__()
             if len(self.queue) > 0:
                 return False
-            if len(self.merge_queue) <= 1:
-                if len(self.merge_queue) == 1:
-                    t = sorted(self.tries.values())
-                    return len(t) <= 1 or (t[1] >= self.max_tries)
-                else:
-                    return True
+            elif len(self.merge_queue) <= 1:
+                return len(self.solutions) == 1
             else:
                 return False
         return False
@@ -72,27 +72,37 @@ class SplitManager:
     def next_instance(self) -> Tuple[int, Instance]:
         return self.queue.pop(0)
 
-    def __accept_one__(
+    def __find_valid_solution__(
         self, sols: Set[Solution], old_dependencies: Set[int]
-    ) -> Tuple[bool, List[str]]:
-        new_cost = get_cost(self.instance, list(sols)[0].to_mask())
-        if new_cost >= sum(
+    ) -> List[str]:
+        # If no progress was made
+        old_cost = sum(
             get_cost(self.instance, self.solutions[x]) for x in old_dependencies
-        ):
-            return True, list(sols)[0].tests
-        new_partition = []
-        for x in old_dependencies:
-            new_partition += self.partitions[x]
-        new_inst = self.instance.subset(new_partition)
-        predictor = self.predictor_builder(new_inst)
-        for sol in sols:
-            solution = sol.tests
-            # Now we need to check that it works
-            if predictor.can_predict(
-                np.asarray([t in solution for t in new_inst.tests])
-            ):
-                return True, solution
-        return False, []
+        )
+        valid_sols = [
+            sol for sol in sols if get_cost(self.instance, sol.tests) < old_cost
+        ]
+        if len(valid_sols) == 0:
+            old_sol = []
+            for x in old_dependencies:
+                old_sol += self.solutions[x]
+            return old_sol
+        else:
+            new_partition = []
+            for x in old_dependencies:
+                new_partition += self.partitions[x]
+            new_inst = self.instance.subset(new_partition)
+            predictor = self.predictor_builder(new_inst)
+            for sol in valid_sols:
+                # Now we need to check that it works
+                if predictor.can_predict(
+                    np.asarray([t in sol.tests for t in new_inst.tests])
+                ):
+                    return sol.tests
+            old_sol = []
+            for x in old_dependencies:
+                old_sol += self.solutions[x]
+            return old_sol
 
     def __update_merge_queue__(self) -> None:
         self.rng.shuffle(self.merge_queue)
@@ -118,123 +128,33 @@ class SplitManager:
         # Update solution
         solution = []
         if id in self.dependencies:
-            found, solution = self.__accept_one__(sols, self.dependencies[id])
-            if not found:
-                for x in self.dependencies[id]:
-                    self.tries[x] += 1
-                    if self.tries[x] < self.max_tries:
-                        self.merge_queue.append(x)
-                del self.dependencies[id]
-                return False
+            solution = self.__find_valid_solution__(sols, self.dependencies[id])
         else:
             solution = list(sols)[0].tests
-
+            assert False, f"{data} \n\nDEPS:\n\t{self.dependencies}"
         # Update dict
         new_partition = []
         for x in self.dependencies[id]:
             del self.solutions[x]
+            del self.scores[x]
             new_partition += self.partitions[x]
             del self.partitions[x]
-            del self.tries[x]
         del self.dependencies[id]
         self.partitions[id] = new_partition
         self.solutions[id] = solution
-        self.tries[id] = 0
+        self.scores[id] = get_cost(self.instance, solution)
 
         self.merge_queue.append(id)
         return True
 
     def current_best_score(self) -> int:
-        return sum(get_cost(self.instance, sol) for sol in self.solutions.values())
+        return sum(s for s in self.scores.values())
 
     def get_solutions(self) -> Set[Solution]:
         out = []
         for part in self.solutions.values():
             out += part
         return {Solution(self.instance, tuple(out))}
-
-
-class SplitChooser:
-    def __init__(
-        self,
-        instance: Instance,
-        splits: int,
-        seed: Optional[int],
-        predictor_builder: Callable[[Instance], Predictor],
-        max_tries: int,
-    ):
-        self.instance = instance
-        self.max_tries = max_tries
-        self.managers = [
-            SplitManager(
-                instance,
-                splits,
-                (i * 17 + (seed or 0)) * 17 + 31,
-                predictor_builder,
-                max_tries,
-            )
-            for i in range(10)
-        ]
-        self.second_phase = False
-        self.chosen_one = 0
-        self.queue = []
-        for i, m in enumerate(self.managers):
-            self.queue.append((i, m.next_instance()))
-
-    def current_best_score(self) -> int:
-        if self.second_phase:
-            return self.managers[self.chosen_one].current_best_score()
-        return min(m.current_best_score() for m in self.managers)
-
-    def get_solutions(self) -> Set[Solution]:
-        if self.second_phase:
-            return self.managers[self.chosen_one].get_solutions()
-        out = set()
-        for m in self.managers:
-            out |= m.get_solutions()
-        return out
-
-    def has_next(self) -> bool:
-        if self.second_phase:
-            return self.managers[self.chosen_one].has_next()
-        return len(self.queue) > 0
-
-    def is_done(self) -> bool:
-        if self.second_phase:
-            return self.managers[self.chosen_one].is_done()
-        if len(self.queue) == 0:
-            alive = 0
-            for i, m in enumerate(self.managers):
-                if m.smallest_partition() >= 100:
-                    continue
-                alive += 1
-                if not m.is_done() and m.has_next():
-                    self.queue.append((i, m.next_instance()))
-
-            if alive == 0:
-                self.second_phase = True
-                self.chosen_one = 0
-                score = 1e99
-                for i, m in enumerate(self.managers):
-                    if m.current_best_score() < score:
-                        self.chosen_one = i
-                        score = m.current_best_score()
-                # Keep relevant tasks
-                self.queue = [x for x in self.queue if x[0] == self.chosen_one]
-                return self.is_done()
-            return len(self.queue) == 0
-        return False
-
-    def next_instance(self) -> Tuple[int, Tuple[int, Instance]]:
-        if self.second_phase:
-            if self.queue:
-                return self.queue.pop()
-            return self.chosen_one, self.managers[self.chosen_one].next_instance()
-        return self.queue.pop()
-
-    def feed(self, data: Tuple[int, int, Set[Solution]]) -> bool:
-        manager = self.managers[data[0]]
-        manager.feed(data[1:])
 
 
 class FusionSolver(Solver):
@@ -263,16 +183,14 @@ class FusionSolver(Solver):
     ) -> Set[Solution]:
         self.instance = instance
         total_cost = instance.total_cost()
-        self.split_manager = SplitChooser(
-            instance, self.splits, seed, predictor_builder, samples
-        )
+        self.split_manager = Fusion(instance, self.splits, seed, predictor_builder)
+        best_score = self.split_manager.current_best_score()
         if verbose:
-            best_score = self.split_manager.current_best_score()
             print(
                 f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_score}{F.RESET} ({F.LIGHTCYAN_EX}{best_score/ total_cost:.1%}{F.RESET})"
             )
         pbar = ProgressBar(
-            total=(self.splits * 2 - 1) * self.split_manager.max_tries * 10,
+            total=(self.splits * 2 - 1),
             name=self.get_name(),
             use_tqdm=use_tqdm,
         )
@@ -280,17 +198,17 @@ class FusionSolver(Solver):
         kwargs["use_tqdm"] = False
         kwargs["verbose"] = False
         kwargs["samples"] = samples
-        left_over = 0
+        score = best_score
         if nprocs > 1:
             pool = ProcessPoolExecutor(nprocs)
             futures = []
             while not self.split_manager.is_done():
                 while len(futures) < nprocs and self.split_manager.has_next():
-                    did, (id, sub_instance) = self.split_manager.next_instance()
+                    (id, sub_instance) = self.split_manager.next_instance()
                     futures.append(
                         pool.submit(
                             __solve__,
-                            (did, id),
+                            id,
                             self.solver_builder(),
                             sub_instance,
                             predictor_builder(sub_instance),
@@ -299,40 +217,36 @@ class FusionSolver(Solver):
                     )
                 done, _ = wait(futures, return_when="FIRST_COMPLETED")
                 for future in done:
-                    (did, id), out = future.result()
-                    accepted = self.split_manager.feed((did, id, out))
+                    id, out = future.result()
+                    accepted = self.split_manager.feed((id, out))
                     futures.remove(future)
+                    pbar.update(1)
                     if accepted:
-                        todo = max(0, self.split_manager.max_tries - left_over)
-                        left_over -= self.split_manager.max_tries - todo
-                        if on_progress_callback is not None:
+                        if (
+                            self.split_manager.current_best_score() < score
+                            and on_progress_callback is not None
+                        ):
                             on_progress_callback(self.split_manager.get_solutions())
-                        pbar.update(todo)
-                    else:
-                        pbar.update(1)
-                        left_over += 1
                 score = self.split_manager.current_best_score()
                 pbar.set_best(score, score / total_cost)
             pool.shutdown()
         else:
             sub_solver = self.solver_builder()
             while not self.split_manager.is_done():
-                did, (id, sub_instance) = self.split_manager.next_instance()
+                (id, sub_instance) = self.split_manager.next_instance()
                 out = sub_solver.solve(
                     sub_instance,
                     predictor_builder,
                     **kwargs,
                 )
-                accepted = self.split_manager.feed((did, id, out))
+                accepted = self.split_manager.feed((id, out))
+                pbar.update(1)
                 if accepted:
-                    todo = max(0, self.split_manager.max_tries - left_over)
-                    left_over -= self.split_manager.max_tries - todo
-                    pbar.update(todo)
-                    if on_progress_callback is not None:
+                    if (
+                        self.split_manager.current_best_score() < score
+                        and on_progress_callback is not None
+                    ):
                         on_progress_callback(self.split_manager.get_solutions())
-                else:
-                    pbar.update(1)
-                    left_over += 1
                 score = self.split_manager.current_best_score()
                 pbar.set_best(score, score / total_cost)
         pbar.close()

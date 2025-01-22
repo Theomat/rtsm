@@ -9,7 +9,6 @@ if __name__ == "__main__":
     from rtsm.instance import Instance
     from rtsm.solution import Solution
     from rtsm.predictors.predictor import Predictor
-    from rtsm.solvers.retry_solver import RetrySolver
     from rtsm.solvers.fusion_solver import FusionSolver
     from rtsm.helper import (
         get_predictors,
@@ -59,11 +58,17 @@ if __name__ == "__main__":
     group.add_argument(
         "--seed",
         type=int,
-        default=None,
+        default=1,
         help="seed used for probabilistic solvers",
     )
+    group.add_argument(
+        "--tries",
+        type=int,
+        default=1,
+        help="number of attempts tried with no improvement before giving up",
+    )
 
-    group = parser.add_argument_group("approximate (linear, logistic-rank)")
+    group = parser.add_argument_group("approximate (weighted, linear, logistic-rank)")
     group.add_argument(
         "--accuracy",
         type=bounded_float(0, 1),
@@ -73,7 +78,6 @@ if __name__ == "__main__":
 
     parser.add_argument("-q", "--quiet", action="store_true")
     parser.add_argument("--no-autosave", action="store_true")
-    parser.add_argument("--retry", action="store_true")
 
     parser.add_argument(
         "-p",
@@ -93,10 +97,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     verbose: bool = not args.quiet
-    retry: bool = args.retry
     swap: bool = args.swap
     no_autosave: bool = args.no_autosave
     procs: int = args.procs
+    tries: int = args.tries
 
     initial_solution: str = args.start or ""
     # Check output file can be written to otherwise it is useless to compute but not being able to save
@@ -177,11 +181,7 @@ if __name__ == "__main__":
                 fd,
             )
 
-    solver = (
-        FusionSolver(base_solver.__class__, -1)
-        if not retry
-        else RetrySolver(base_solver.__class__, -1)
-    )
+    solver = FusionSolver(base_solver.__class__, -1)
 
     # Anytime solving
     def save_result_pre_emptively():
@@ -196,34 +196,40 @@ if __name__ == "__main__":
         atexit.register(save_result_pre_emptively)
 
     # Solve
-    current_solution_size = sum(instance.warm_start())
+    current_cost = Solution(
+        instance, [1 for _ in instance.tests], instance.warm_start()
+    ).cost()
     progress = True
     size = 20
     solutions = set()
-    while progress:
+    i = 0
+    last_with_progress = i
+    while i - last_with_progress < tries:
         progress = False
-        solver.splits = current_solution_size // size
+        solver.splits = sum(instance.warm_start()) // size
         solutions = solver.solve(
             instance,
             predictor_builder,
             verbose,
             procs,
             verbose=False,
-            seed=args.seed,
+            seed=args.seed + i,
             on_progress_callback=save,
         )
+        i += 1
         if len(solutions) == 0:
             break
-        sols = sorted([(len(x.tests), x) for x in solutions], key=lambda x: x[0])
-        one_sol = sols[0][1].tests
-        new_best = len(one_sol)
-        if new_best < current_solution_size:
+        sols = sorted([(x.cost(), x) for x in solutions], key=lambda x: x[0])
+        one_sol = sols[0][1]
+        new_cost = one_sol.cost()
+        if new_cost < current_cost:
             save(solutions)
             progress = True
-            instance.set_start(one_sol)
-            current_solution_size = new_best
-            if new_best // size <= 1:
-                if new_best == 1:
+            last_with_progress = i
+            instance.set_start(one_sol.tests)
+            current_cost = new_cost
+            if len(one_sol.tests) // size <= 1:
+                if len(one_sol.tests) == 1:
                     break
                 solver = base_solver
 
