@@ -28,7 +28,7 @@ class ProgressBar:
                 "" if ratio is None else f"({F.LIGHTYELLOW_EX}{ratio:.1%}{F.RESET})"
             )
             self.pbar.set_postfix_str(
-                f"best: {F.LIGHTYELLOW_EX}{score}{F.RESET} {additional}"
+                f"best: {F.LIGHTYELLOW_EX}{score:.2}{F.RESET} {additional}"
             )
 
     def close(self):
