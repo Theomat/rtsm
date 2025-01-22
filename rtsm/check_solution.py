@@ -38,7 +38,13 @@ if __name__ == "__main__":
     from rtsm.utils.color_helper import get_color_helper
 
     F = get_color_helper()
-    from rtsm.predictors.predictor import Predictor, to_ranking, ranking_error, to_ranks
+    from rtsm.predictors.predictor import (
+        Predictor,
+        to_ranking,
+        accuracy_error,
+        to_ranks,
+        kendall,
+    )
 
     from rtsm.helper import get_predictors, get_data_loaders, try_load_instance
 
@@ -126,7 +132,8 @@ if __name__ == "__main__":
     sR = to_ranking(np.sum(instance.subset(one_sol).performance_matrix, axis=-1))
     ranks_no_pred = to_ranks(sR)
     print("without prediction:")
-    print(f"\tranking error: {F.GREEN}{ranking_error(R, sR):.2%}{F.RESET}")
+    print(f"\taccuracy error: {F.GREEN}{accuracy_error(R, sR):.2%}{F.RESET}")
+    print(f"\tKendall coefficient: {F.GREEN}{kendall(R, sR):.2%}{F.RESET}")
 
     def spearman_to_str(rankA, rankB):
         out = []
@@ -138,20 +145,21 @@ if __name__ == "__main__":
         return " ".join(out)
 
     spearman_desc = spearman_to_str(ranks_original, ranks_no_pred)
-    print(f"\tspearman: {spearman_desc}")
-    print("with prediction:")
+    print(f"\tSpearman: {spearman_desc}")
+    print("with prediction", end="")
 
     start = time.perf_counter()
     mask = my_sol.to_mask()
     ranking_pred = predictor.get_ranking(mask)
     duration = time.perf_counter() - start
-    error = ranking_error(R, ranking_pred)
+    error = accuracy_error(R, ranking_pred)
     ranks_pred = to_ranks(ranking_pred)
-    print(
-        f"\tranking error ({F.LIGHTYELLOW_EX}{duration:.2f}{F.RESET}s): {F.GREEN}{error:.2%}{F.RESET}"
-    )
+    print(f"({F.LIGHTYELLOW_EX}{duration:.2f}{F.RESET}s):")
+    print(f"\taccuracy error: {F.GREEN}{error:.2%}{F.RESET}")
+    print(f"\tKendall coefficient: {F.GREEN}{kendall(R, ranking_pred):.2%}{F.RESET}")
+
     spearman_desc = spearman_to_str(ranks_original, ranks_pred)
-    print(f"\tspearman: {spearman_desc}")
+    print(f"\tSpearman: {spearman_desc}")
 
     if args.full is not None:
         print()
@@ -176,7 +184,8 @@ if __name__ == "__main__":
 
         Rpred = to_ranking(np.sum(copy, axis=-1))
         ranks_pred = to_ranks(Rpred)
-        error = ranking_error(R, Rpred)
-        print(f"\tranking error: {F.GREEN}{error:.2%}{F.RESET}")
+        error = accuracy_error(R, Rpred)
+        print(f"\taccuracy error: {F.GREEN}{error:.2%}{F.RESET}")
+        print(f"\tKendall coefficient: {F.GREEN}{kendall(R, Rpred):.2%}{F.RESET}")
         spearman_desc = spearman_to_str(ranks_original, ranks_pred)
-        print(f"\tspearman: {spearman_desc}")
+        print(f"\tSpearman: {spearman_desc}")
