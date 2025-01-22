@@ -70,10 +70,10 @@ if __name__ == "__main__":
 
     group = parser.add_argument_group("approximate (weighted, linear, logistic-rank)")
     group.add_argument(
-        "--accuracy",
+        "--kendall",
         type=bounded_float(0, 1),
         default=1.0,
-        help="accuracy of the ranking needed",
+        help="Kendall coefficient of the ranking needed",
     )
 
     parser.add_argument("-q", "--quiet", action="store_true")
@@ -149,7 +149,7 @@ if __name__ == "__main__":
             )
 
     # Build predictor
-    accuracy: float = args.accuracy
+    accuracy: float = args.kendall
 
     def predictor_builder(instance: Instance) -> Predictor:
         return predictors[args.predictor](instance, accuracy=accuracy)
@@ -176,7 +176,7 @@ if __name__ == "__main__":
                     "runtime": int(end / 1e6) / 1e3,
                     "base_solver": args.solver,
                     "predictor": args.predictor,
-                    "accuracy": args.accuracy,
+                    "accuracy": accuracy,
                 },
                 fd,
             )
