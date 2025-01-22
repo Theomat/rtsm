@@ -199,13 +199,11 @@ if __name__ == "__main__":
     current_cost = Solution(
         instance, [1 for _ in instance.tests], instance.warm_start()
     ).cost()
-    progress = True
     size = 20
     solutions = set()
     i = 0
     last_with_progress = i
     while i - last_with_progress < tries:
-        progress = False
         solver.splits = sum(instance.warm_start()) // size
         solutions = solver.solve(
             instance,
@@ -224,7 +222,6 @@ if __name__ == "__main__":
         new_cost = one_sol.cost()
         if new_cost < current_cost:
             save(solutions)
-            progress = True
             last_with_progress = i
             instance.set_start(one_sol.tests)
             current_cost = new_cost
