@@ -25,6 +25,9 @@ class Instance:
     )
 
     def __post_init__(self):
+        self.performances.sort()
+        self.variants.sort()
+        self.tests.sort()
         self.performance_matrix = np.zeros(
             (len(self.performances), len(self.variants), len(self.tests))
         )
