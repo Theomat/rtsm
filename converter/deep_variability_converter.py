@@ -56,25 +56,27 @@ def load_data(path: str):
     return perf_matrix
 
 
-def save_for_metric(df: pd.DataFrame, metrics: List[str], cost: str):
+def save_for_metric(df: pd.DataFrame, metrics: List[str], cost: str, ignore: List[str]):
     allowed = df.columns.to_list()
-    allowed.remove("configurationID")
-    allowed.remove("inputname")
-    assert all(
-        metric in allowed for metric in metrics
-    ), f"Invalid metric, allowed metrics are: {', '.join(allowed)}"
+    assert all(m in allowed for m in metrics)
+    assert len(cost) == 0 or cost in allowed
 
+    config_columns = [x for x in allowed if x not in metrics and x not in ignore]
     if len(cost) > 0:
         filename: str = f"./{name}_{'_'.join(metrics)}_cost_{cost}.csv"
     else:
         filename: str = f"./{name}_{'_'.join(metrics)}.csv"
-    df = df[["configurationID", "inputname"] + metrics]
+    config_columns.remove("inputname")
+
+    df["variant"] = df[config_columns].apply(
+        lambda row: "_".join(row.values.astype(str)), axis=1
+    )
     df = df.rename(
         columns={
-            "configurationID": "variant",
             "inputname": "test",
         }
     )
+    df = df[["variant", "test"] + metrics]
     df.to_csv(filename, index=False)
     if len(cost) > 0:
         with open(filename) as fd:
@@ -102,6 +104,10 @@ if __name__ == "__main__":
         "--cost", help="The cost metric to be used", type=str, default=""
     )
     parser.add_argument(
+        "-i",
+        "--ignore", nargs='*', help="The cost metric to be used", type=str,
+    )
+    parser.add_argument(
         "metrics",
         help="The performance metric to be used",
         nargs="+",
@@ -110,9 +116,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     folder: str = args.folder
     cost: str = args.cost
+    ignore = args.ignore or []
 
     name: str = os.path.basename(folder)
     metrics: List[str] = args.metrics
 
-    df = load_data(args.folder)
-    save_for_metric(df, metrics, cost)
+    for i in range(1, len(metrics) + 1):
+        df = load_data(args.folder)
+        save_for_metric(df, metrics[:i], cost, ignore + metrics[i:])
