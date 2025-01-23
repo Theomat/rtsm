@@ -27,17 +27,13 @@ def __learn_linear_model__(
 
 
 class WeightedPrediction(Prediction):
-    def __init__(
-        self, inputs: List[str], outputs: List[str], A: np.ndarray, b: np.ndarray
-    ) -> None:
+    def __init__(self, inputs: List[str], outputs: List[str], A: np.ndarray) -> None:
         self.inputs = inputs
         self.outputs = outputs
         self.A = A
-        self.b = b
 
     def predict(self, information: np.ndarray) -> np.ndarray:
-        mask = [t in self.inputs for t in self.outputs]
-        out = np.sum(information[:, :, mask], axis=1) * self.A + self.b
+        out = np.sum(information * self.A.reshape((1, 1, -1)), axis=-1)
         return out
 
     def export(self, path: str) -> None:
@@ -46,7 +42,6 @@ class WeightedPrediction(Prediction):
             "input": self.inputs,
             "output": self.outputs,
             "coefficients": self.A.tolist(),
-            "translation": self.b.tolist(),
         }
         with open(path, "w") as fd:
             json.dump(out, fd)
@@ -108,17 +103,12 @@ class WeightedPredictor(Predictor):
                 X.shape[-1],
             )
         )
-        intercepts = np.zeros((X.shape[0],))
         for h in range(X.shape[0]):
-            coeff, intercept, __ = __learn_linear_model__(
-                X[h, :, :], self.T[h], self.positive
-            )
+            coeff, _, __ = __learn_linear_model__(X[h, :, :], self.T[h], self.positive)
             coeffs[h, :] = coeff
-            intercepts[h] = intercept
 
         return WeightedPrediction(
             self.instance.get_tests(usable),
             [t for t, b in zip(self.instance.tests, usable) if not b],
             coeffs,
-            intercepts,
         )
