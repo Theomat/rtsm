@@ -176,13 +176,9 @@ if __name__ == "__main__":
             ", ".join(new_variants),
         )
         prediction = predictor.export_prediction(mask)
-        copy = full.performance_matrix.copy()
-        rev_mask = np.logical_not(np.asarray(mask))
-        copy[:, :, rev_mask] = 0
-        missing = prediction.predict(full.performance_matrix[:, :, mask])
-        copy[:, :, rev_mask] = missing
+        predicted_sum = prediction.predict(full.performance_matrix[:, :, mask])
 
-        Rpred = to_ranking(np.sum(copy, axis=-1))
+        Rpred = to_ranking(predicted_sum)
         ranks_pred = to_ranks(Rpred)
         error = accuracy_error(R, Rpred)
         print(f"\taccuracy: {F.GREEN}{1-error:.2%}{F.RESET}")
