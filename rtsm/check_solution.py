@@ -133,7 +133,7 @@ if __name__ == "__main__":
     ranks_no_pred = to_ranks(sR)
     print("without prediction:")
     print(f"\taccuracy: {F.GREEN}{1-accuracy_error(R, sR):.2%}{F.RESET}")
-    print(f"\tKendall coefficient: {F.GREEN}{kendall(R, sR):.2}{F.RESET}")
+    print(f"\tKendall coefficient: {F.GREEN}{1-kendall(R, sR):.2}{F.RESET}")
 
     def spearman_to_str(rankA, rankB):
         out = []
