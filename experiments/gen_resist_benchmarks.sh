@@ -13,6 +13,7 @@ function gen(){
 }
 
 gen gcc ctime --cost ctime
+rm $FOLDER/imagemagick/.csv
 gen imagemagick time size --cost time
 gen lingeling conflicts reductions -i cps
 gen nodejs ops
