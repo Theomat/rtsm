@@ -3,6 +3,7 @@
 SEEDS="1 2 3 4 5 6 7 8 9 10"
 SOLVERS="rs bs pca greedy"
 KENDALLS="1"
+FRACTIONS=".25 .5 .75"
 
 SRC="./benchmarks"
 SUBINST="./subinstances"
