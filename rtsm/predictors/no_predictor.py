@@ -1,9 +1,29 @@
-from typing import Tuple
+from typing import List, Tuple
+import json
 
 from rtsm.instance import Instance
-from rtsm.predictors.predictor import Predictor, to_ranking, ranking_error
+from rtsm.predictors.predictor import Prediction, Predictor, to_ranking, ranking_error
 
 import numpy as np
+
+
+class NoPrediction(Prediction):
+    def __init__(self, inputs: List[str], outputs: List[str]) -> None:
+        self.inputs = inputs
+        self.outputs = outputs
+
+    def predict(self, information: np.ndarray) -> np.ndarray:
+        out = np.sum(information, axis=-1)
+        return out
+
+    def export(self, path: str) -> None:
+        out = {
+            "type": "none",
+            "input": self.inputs,
+            "output": self.outputs,
+        }
+        with open(path, "w") as fd:
+            json.dump(out, fd)
 
 
 class NoPredictor(Predictor):
@@ -27,3 +47,9 @@ class NoPredictor(Predictor):
         X = self.Xt[:, :, usable]
         D = np.sum(X, axis=-1)
         return to_ranking(D)
+
+    def export_prediction(self, usable: Tuple[bool]):
+        return NoPrediction(
+            self.instance.get_tests(usable),
+            [t for t, b in zip(self.instance.tests, usable) if not b],
+        )
