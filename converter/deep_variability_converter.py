@@ -105,7 +105,10 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-i",
-        "--ignore", nargs='*', help="The cost metric to be used", type=str,
+        "--ignore",
+        nargs="*",
+        help="The cost metric to be used",
+        type=str,
     )
     parser.add_argument(
         "metrics",
