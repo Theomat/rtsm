@@ -12,9 +12,9 @@ for file in $(ls $SRC/*.csv); do
     echo $filename
     for seed in $SEEDS; do
         for fraction in $FRACTIONS; do
-            dst_file=$DST/${file}.$seed.$fraction
+            dst_file=$DST/${filename}.$seed.$fraction.csv
             if [ ! -f $dst_file ]; then
-                python ./scripts/gen_sub_instance.py -s $seed -o  $file  $fraction || rm $dst_file >/dev/null
+                python ./scripts/gen_sub_instance.py -s $seed -o $dst_file $file $fraction || rm $dst_file >/dev/null
             fi
         done
     done

@@ -14,18 +14,18 @@ for file in $(ls $SRC/*.csv); do
     echo $filename
     for seed in $SEEDS; do
         for fraction in $FRACTIONS; do
-            subinstance_file=$SUBINST/${file}.$seed.$fraction
+            subinstance_file=$SUBINST/${filename}.$seed.$fraction.csv
             for solver in $SOLVERS; do
                 for solve_seed in $SEEDS; do
                     for kendall in $KENDALLS; do
-                        dst_file="$file.$seed.$fraction.$solve_seed.$solver.$kendall"
+                        dst_file="$filename.$seed.$fraction.$solve_seed.$solver.$kendall"
                         if [ ! -f "$DST/$dst_file.tmp" ]; then
                             echo "./experiments/run_instance_and_extract_data.sh $solve_seed $kendall $solver $subinstance_file $file $dst_file $DST"
                         fi
                     done
                 done
             done
-            dst_file="$file.$seed.$fraction.1.MILP.1"
+            dst_file="$filename.$seed.$fraction.1.MILP.1"
             if [ ! -f "$DST/$dst_file.tmp" ]; then
                 echo "./experiments/run_instance_and_extract_data.sh 1 1 MILP $subinstance_file $file $dst_file $DST"
             fi
