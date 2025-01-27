@@ -30,7 +30,7 @@ rm $DST/sqlite_q1_q2_q3_q4_q5_q6_q7_q8_q9_q10_q11.csv
 rm $DST/sqlite_q1_q2_q3_q4_q5_q6_q7_q8_q9_q10_q11_q12.csv
 rm $DST/sqlite_q1_q2_q3_q4_q5_q6_q7_q8_q9_q10_q11_q12_q13.csv
 rm $DST/sqlite_q1_q2_q3_q4_q5_q6_q7_q8_q9_q10_q11_q12_q13_q14.csv
-gen x264 etime cpu size fps kbs --cost etime -i usertime -i systemtime -i elapsedtime
+gen x264 etime cpu size fps kbs --cost etime -i usertime systemtime elapsedtime cabac ref deblock analyse me subme mixed_ref me_range trellis 8x8dct fast_pskip chroma_qp_offset bframes b_pyramid b_adapt direct weightb open_gop weightp scenecut rc_lookahead mbtree qpmax aq-mode frames
 gen xz time size --cost time
 
 yes | rm -r ../RESIST_perf_clustering
