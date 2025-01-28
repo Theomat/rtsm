@@ -13,7 +13,8 @@ def read_file(file: str) -> dict:
     filename = filename[filename.rfind("/") + 1 :]
     out = {}
     data = []
-    data.append(parts[-4])
+    fraction = parts[-4]
+    data.append(fraction if fraction != "5" else "50")
     data.append(parts[-5])
     data.append(parts[-3])
     data.append(parts[-2])
