@@ -10,7 +10,7 @@ COLUMNS = "fraction,partition_seed,seed,solver,target_kendall,kendall,spearman,s
 def read_file(file: str) -> dict:
     parts = [x for x in file.split(".")[1:-1] if len(x) > 0]
     filename = parts[0]
-    filename = filename[filename.index("/") + 1 :]
+    filename = filename[filename.rfind("/") + 1 :]
     out = {}
     data = []
     data.append(parts[-4])
@@ -47,7 +47,7 @@ def read_file(file: str) -> dict:
         total_cost = cost[cost.index("/") + 1 : cost.index("(")].strip()
         data.append(sol_cost)
         data.append(total_cost)
-    return {"file": file, "data": data}
+    return {"file": filename, "data": data}
 
 
 if __name__ == "__main__":
@@ -68,7 +68,7 @@ if __name__ == "__main__":
         content[file].append(dico["data"])
 
     for file, lines in content.items():
-        with open(file, "w") as fd:
+        with open(os.path.join(DST, file), "w") as fd:
             writer = csv.writer(fd)
             writer.writerow(COLUMNS)
             writer.writerows(lines)
