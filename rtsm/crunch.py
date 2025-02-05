@@ -212,7 +212,7 @@ if __name__ == "__main__":
             procs,
             verbose=False,
             seed=args.seed + i,
-            on_progress_callback=save,
+            on_progress_callback=save if not no_autosave else lambda *args: len(args),
         )
         i += 1
         if len(solutions) == 0:
@@ -221,7 +221,8 @@ if __name__ == "__main__":
         one_sol = sols[0][1]
         new_cost = one_sol.cost()
         if new_cost < current_cost:
-            save(solutions)
+            if not no_autosave:
+                save(solutions)
             last_with_progress = i
             instance.set_start(one_sol.tests)
             current_cost = new_cost
