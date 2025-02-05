@@ -10,7 +10,7 @@ def process_eval(data: dict, plus: bool = True) -> Tuple[bool, dict]:
     for problem, sol in d.items():
         out[problem] = []
         for i, row in enumerate(sol["base"]):
-            if row[0] == "timed out"or row[0] == "thrown exception":
+            if row[0] == "timed out" or row[0] == "thrown exception":
                 relevant = [1 for _ in row[1]]
             else:
                 mapper = (lambda x: x) if row[0] != "failed" else (lambda x: 1 - x)
