@@ -1,5 +1,9 @@
 # SyGus files
 *.sl
+*.json
+*.sh
+csv_data/
+results/
 
 out/
 
