@@ -7,9 +7,16 @@ SRC="./benchmarks"
 DST="./subinstances"
 mkdir -p $DST
 
+FORBIDDEN_PATTERNS="defects4j|gitbugjava"
+
 for file in $(ls $SRC/*.csv); do
     filename="${file##*/}"
     echo $filename
+    if [[ "$filename" =~ ^($FORBIDDEN_PATTERNS) ]]; then
+        dst_file=$DST/${filename}.1.50.csv
+        cp $file $dst_file
+        continue
+    fi
     for seed in $SEEDS; do
         for fraction in $FRACTIONS; do
             dst_file=$DST/${filename}.$seed.$fraction.csv
