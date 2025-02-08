@@ -5,7 +5,7 @@ SOLVERS="rs bs pca greedy"
 KENDALLS="1"
 FRACTIONS=".25 .5 .75"
 
-SRC="./benchmarks"
+SRC="../benchmarks-rtsm/benchmarks"
 SUBINST="./subinstances"
 DST="./results"
 mkdir -p $DST
