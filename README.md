@@ -4,10 +4,8 @@
 
 The goal is to minimise a test set while keeping the discriminating power of the test set.
 Here a test is an instance on which performances can be measured for a variant.
-A variant is an instance of a program, it can be different algorithms or different versiosn of the smae algorithms for example with different parameters.
+A variant is an instance of a program, it can be different algorithms or different versions of the same algorithms with different parameters  for example.
 Our tool takes as input a performance matrix of these variants on the set of tests.
-Then we choose the prediction model to be used (can be none), using a prediction model reduces a bit Generalizability but enables a better minimisation.
-In practice, using a linear model enables enormous gain at little cost.
 Then our tool produces the subset of tests you need to keep the discriminative power of your tests.
 
 In other words, it can be used to minimise benchmarks, to study variability of software, etc.
@@ -15,6 +13,8 @@ A lot of options are configurable.
 Of course, this is not magic, this assumes that the next variants that are going to be tested are somehow in the same distribution as the variants used in order to minimise.
 
 See the associated paper for the technical details.
+
+Benchmarks are available at <https://github.com/Theomat/benchmarks-rtsm>.
 
 <!-- toc -->
 
@@ -25,9 +25,8 @@ See the associated paper for the technical details.
   - [Start from an existing solution](#start-from-an-existing-solution)
   - [Multi performance metrics](#multi-performance-metrics)
   - [Genetic Algorithm](#genetic-algorithm)
-- [Input Format](#input-format)
-  - [CSV](#csv)
-- [Citing](#citing)
+- [Input Format](https://github.com/Theomat/benchmarks-rtsm)
+<!-- - [Citing](#citing) -->
 
 <!-- tocstop -->
 
@@ -65,7 +64,6 @@ Now this instance is quite easy and has few tests that can actually be removed.
 
 **Warning**: Multiprocessing kills reproducibility of results, since sub-task ordering is not guaranteed to be the same across runs and new subtasks depend on previous results then changing the execution order changes final results.
 
-
 The ``SAT20-MAIN.csv`` contains 400 tests with none that can be at first glance deemed necessary making it a much harder problem so we will use multiple CPUs:
 
 ```bash
@@ -101,32 +99,4 @@ For multiple performance metrics, the accuracy parameter is such that the worse 
 
 ### Genetic Algorithm
 
-There is a GA solver, which is available only if [PyGAD](https://pygad.readthedocs.io/en/latest/index.html) is installed. However, it is not recommended as it is **dramatically slower** and offers **dramatically worse** performances than other methods. In other words, we did not manage to make it work despite our attemps. If you find a set of parameters that make geentic algorithm work, please reach out or contribute.
-
-## Input Format
-
-### CSV
-
-There are two required columns in your CSV, one entitled ``variant`` and one entitled ``test``, every other column is considered as a different performance metric.
-Both columns ``variant`` and ``test`` are considered as ``strings`` wherease all other columns are considered as ``float``.
-
-You can prefix the CSV file by another CSV file which maps each `test` to a `cost` and then produce a line of 80 `=` in which cas RTSM will try to minimise the cost and not the size of the benchmark.
-
-See ``examples/x264_kbs_etime.csv`` for an example file that contains two different performance metrics.
-
-## Citing
-
-If you use this software, we encourage you to cite us:
-
-TODO
-
-```bibtex
-@article{matricon24rtsm,
-  author  = {Matricon, Th{\'e}o
-               and Acher, Mathieu},
-  year    = {2024},
-  title   = {Minimising benchmarks and keep ranking variants
-accurately}
-
-}
-```
+There is a GA solver, which is available only if [PyGAD](https://pygad.readthedocs.io/en/latest/index.html) is installed. However, it is not recommended as it is **dramatically slower** and offers **dramatically worse** performances than other methods. In other words, we did not manage to make it work despite our attempts. If you find a set of parameters that make genetic algorithms work, please reach out or contribute.
