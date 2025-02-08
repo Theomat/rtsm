@@ -1,23 +1,29 @@
-[tool.poetry]
+[project]
 name = "rtsm"
 version = "0.1.0"
 description = "Ranked Test Suite minimisation"
-authors = ["Théo Matricon <theomatricon@gmail.com>"]
-license = "MIT"
+# license-files = ["LICENSE"]
+license = { file = "LICENSE" }
+authors = [
+    {name = "Théo Matricon", email = "theomatricon@gmail.com"}
+]
 readme = "README.md"
-repository = "https://github.com/Theomat/rtsm"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.22",
+    "scikit-learn>=1.0",
+    "colorama>=0.4.4",
+    "tqdm>=4.63.0",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.8"
-numpy = ">=1.22"
-scikit-learn = ">=1.0"
-colorama = ">=0.4.4"
-tqdm = ">=4.63.0"
+[project.optional-dependencies]
+genetic = ["pygad"]
 
-[tool.poetry.group.dev.dependencies]
-ruff = "*"
-pygad = "*"
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[project.urls]
+Homepage = "https://github.com/Theomat/rtsm"
+Repository = "https://github.com/Theomat/rtsm.git"
+
+
+[tool.setuptools]
+packages = ['rtsm']
