@@ -33,7 +33,9 @@ class WeightedPrediction(Prediction):
         self.A = A
 
     def predict(self, information: np.ndarray) -> np.ndarray:
-        out = np.sum(information * self.A.reshape((1, 1, -1)), axis=-1)
+        out = np.sum(
+            information * self.A.reshape((information.shape[0], 1, -1)), axis=-1
+        )
         return out
 
     def export(self, path: str) -> None:
