@@ -47,15 +47,18 @@ class DeterministicSolver(Solver, ABC):
         init = np.asarray(instance.warm_start())
         self.best_sol = [init]
         best_cost = get_cost(instance, init)
+        count_instances = np.sum(init)
         total_cost = instance.total_cost()
         if verbose:
             print(
                 f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_cost}{F.RESET} ({F.LIGHTCYAN_EX}{best_cost / total_cost:.1%}{F.RESET})"
             )
 
-        pbar = ProgressBar(total=np.sum(init), name=self.get_name(), use_tqdm=use_tqdm)
+        pbar = ProgressBar(
+            total=count_instances, name=self.get_name(), use_tqdm=use_tqdm
+        )
         allowed = np.copy(init)
-        for _ in range(best_cost):
+        for _ in range(count_instances):
             to_remove_index = self.__choose_index_to_remove__(allowed, predictor)
             if to_remove_index is None:
                 break
