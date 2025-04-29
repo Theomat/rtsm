@@ -12,12 +12,16 @@ DATA_FILE="$FOLDER/$6.tmp"
 if [ ! -f $SOL_FILE ]; then
     if [ "$3" = "MILP" ]; then
         timeout 3000 python -m rtsm.milp -o $SOL_FILE $4
+        if [ ! -s $SOL_FILE ]; then
+            python experiments/default_solution.py --predictor weighted --seed $1 --solver MIP -o $SOL_FILE --kendall $2 $4 -t 3000
+        fi
     else 
         timeout 3000 python -m rtsm.crunch --predictor weighted --seed $1 --solver $3 -o $SOL_FILE --kendall $2 $4
+        if [ ! -s $SOL_FILE ]; then
+            python experiments/default_solution.py --predictor weighted --seed $1 --solver $3 -o $SOL_FILE --kendall $2 $4 -t 3000
+        fi
     fi
-    if [ ! -s $SOL_FILE ]; then
-        python experiments/default_solution.py --predictor weighted --seed $1 --solver $3 -o $SOL_FILE --kendall $2 $4 -t 3000
-    fi
+    
 fi
 if [ ! -f "$DATA_FILE" ]; then
     full_instance_file=$5
