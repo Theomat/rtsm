@@ -8,7 +8,7 @@ COLUMNS = "fraction,partition_seed,seed,solver,target_kendall,kendall,spearman,s
 
 
 def read_file(file: str) -> dict:
-    parts = [x for x in file.split(".")[1:-1] if len(x) > 0]
+    parts = [x for x in file.split(".")[:-1] if len(x) > 0]
     filename = parts[0]
     filename = filename[filename.rfind("/") + 1 :]
     out = {}
