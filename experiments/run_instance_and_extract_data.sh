@@ -1,3 +1,4 @@
+#!/bin/bash
 #ARGS:
 # 1: seed
 # 2: kendall
