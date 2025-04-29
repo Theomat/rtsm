@@ -36,8 +36,8 @@ def auto_save_fig(file: str):
             c="r",
             linestyle="dotted",
         )
-        plt.xlim(0, 1)
-        plt.ylim(top=1)
+        plt.xlim(0, 1.0125)
+        plt.ylim(top=1.0125)
         plt.xlabel("Cost Ratio")
         plt.ylabel("Kendall")
         plt.legend()
