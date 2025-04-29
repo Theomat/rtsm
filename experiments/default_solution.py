@@ -1,17 +1,14 @@
 if __name__ == "__main__":
     import argparse
     import sys
-    import os
     import json
     import time
 
     from rtsm.utils.color_helper import get_color_helper
 
     F = get_color_helper()
-    from rtsm.instance import Instance
     from rtsm.solution import Solution
 
-    from rtsm.predictors.predictor import Predictor
     from rtsm.helper import (
         get_predictors,
         get_data_loaders,
@@ -42,8 +39,8 @@ if __name__ == "__main__":
     )
     group.add_argument(
         "--solver",
-        choices=list(solvers.keys()),
-        default=list(solvers.keys())[0],
+        type=str,
+        required=True,
         help="solver to use",
     )
     group.add_argument("--swap", action="store_true", help="swap variants and tests")
@@ -96,8 +93,6 @@ if __name__ == "__main__":
     instance = try_load_instance(args.file, data_loaders, swap)
     # Build predictor
     accuracy: float = args.kendall
-    # Get solver
-    solver = solvers[args.solver]
 
     start = time.perf_counter_ns()
 
