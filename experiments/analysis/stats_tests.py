@@ -1,3 +1,11 @@
+# /// script
+# dependencies = [
+#   "pandas",
+#   "scipy",
+#   "numpy",
+#   "tqdm"
+# ]
+# ///
 import glob
 import sys
 import numpy as np
@@ -11,10 +19,15 @@ folder = sys.argv[1]
 dst = "./stats/"
 
 
+SOLVERS = ["bs", "rs", "pca", "greedy", "MILP"]
+THRESHOLD = 0.01
+
+
 def stat_test(file: str):
     filename = os.path.basename(file)[: -len(".csv")]
     df = pd.read_csv(file)
-    solvers = df["solver"].unique().tolist()
+    solvers = sorted(df["solver"].unique().tolist())
+    count_matrix = np.zeros((len(SOLVERS), len(SOLVERS)))
     df["ratio"] = df["cost"] / df["total_cost"]
     df["score"] = (1 - df["ratio"]) + df["kendall"] * 0.5 + 0.5
     scores = {s: [] for s in solvers}
@@ -45,10 +58,28 @@ def stat_test(file: str):
             ]:
                 stat = wilcoxon(scores[s1], scores[s2], alternative=alternative)
                 alts.append(stat.pvalue)
+            if alts[0] <= THRESHOLD:
+                i1 = SOLVERS.index(s1)
+                i2 = SOLVERS.index(s2)
+                if alts[1] <= THRESHOLD:
+                    count_matrix[i1, i2] += 1
+                elif alts[2] <= THRESHOLD:
+                    count_matrix[i2, i1] += 1
+
             matrix.append([s1, s2, better] + alts)
     with open(f"./{dst}/{filename}_stat.csv", "w") as fd:
         fd.writelines(map(lambda x: ",".join(map(str, x)) + "\n", matrix))
+    return count_matrix
 
 
+cmp_matrix = None
+n = 0
 for file in tqdm.tqdm(glob.glob(f"{folder}/*.csv")):
-    stat_test(file)
+    add = stat_test(file)
+    if cmp_matrix is None:
+        cmp_matrix = add
+    else:
+        cmp_matrix += add
+    n += 1
+print(cmp_matrix)
+print(n)
