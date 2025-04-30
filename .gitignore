@@ -4,7 +4,9 @@
 *.sh
 csv_data/
 results/
-
+csv/
+stats/
+plots/
 out/
 
 # Byte-compiled / optimized / DLL files
