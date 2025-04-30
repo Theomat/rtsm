@@ -21,6 +21,8 @@ def read_file(file: str) -> dict:
     data.append(parts[-1])
     with open(file) as fd:
         lines = fd.readlines()
+        if len(lines) <= 2:
+            return {}
         out["runtime"] = lines[-2]
         out["size"] = lines[-1]
         kendalls = [
@@ -62,12 +64,15 @@ if __name__ == "__main__":
     os.makedirs(DST, exist_ok=True)
 
     content = defaultdict(list)
-
+    skipped = 0
     for file in tqdm.tqdm(glob.glob(f"{folder}/*.tmp")):
         dico = read_file(file)
+        if len(dico) == 0:
+            skipped += 1
+            continue
         file = dico["file"] + ".csv"
         content[file].append(dico["data"])
-
+    print(skipped, "files skipped because solution check failed!")
     for file, lines in content.items():
         with open(os.path.join(DST, file), "w") as fd:
             writer = csv.writer(fd)
