@@ -1,3 +1,12 @@
+# /// script
+# dependencies = [
+#   "pandas",
+#   "seaborn",
+#   "paretoset",
+#   "pltpublish",
+#   "tqdm"
+# ]
+# ///
 import glob
 import sys
 import numpy as np
@@ -11,7 +20,7 @@ import tqdm
 from paretoset import paretoset
 
 folder = sys.argv[1]
-dst = sys.argv[2]
+dst = sys.argv[2] if len(sys.argv) >= 3 else "./plots"
 pub.setup()
 
 
