@@ -22,6 +22,7 @@ def read_file(file: str) -> dict:
     with open(file) as fd:
         lines = fd.readlines()
         if len(lines) <= 2:
+            print("skipping:", file)
             return {}
         out["runtime"] = lines[-2]
         out["size"] = lines[-1]
