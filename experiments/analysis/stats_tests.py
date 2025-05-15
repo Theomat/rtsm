@@ -22,6 +22,8 @@ dst = "./stats/"
 SOLVERS = ["bs", "rs", "pca", "greedy", "MILP"]
 THRESHOLD = 0.05
 FRACTIONS = (25, 50, 75)
+WA = 1
+WB = 1
 
 
 def stat_test(file: str):
@@ -30,15 +32,42 @@ def stat_test(file: str):
     solvers = sorted(df["solver"].unique().tolist())
     count_matrix = np.zeros((len(SOLVERS), len(SOLVERS), len(FRACTIONS) + 1))
     df["ratio"] = df["cost"] / df["total_cost"]
-    df["score"] = (1 - df["ratio"]) + df["kendall"] * 0.5 + 0.5
+    df["score"] = ((1 - df["ratio"]) * WA + (df["kendall"] * 0.5 + 0.5) * WB) / (
+        WA + WB
+    )
     scores = {s: {f: [] for f in FRACTIONS} for s in solvers}
     all_scores = {s: [] for s in solvers}
+    data = []
     for group_name, group_df in df.groupby(["seed", "partition_seed", "fraction"]):
         fraction = group_name[-1]
+        key = f"{filename}_{fraction}_{group_name[0]}_{group_name[1]}"
+        if "MILP" not in group_df["solver"].unique():
+            solver = "MILP"
+            pot_df = df[
+                (df["fraction"] == fraction)
+                & (df["partition_seed"] == group_name[1])
+                & (df["solver"] == solver)
+            ]["score"]
+            if len(pot_df) == 1:
+                score = pot_df.iloc[0]
+                scores[solver][fraction].append(float(score))
+                all_scores[solver].append(float(score))
+                data.append((key, solver, score))
+            else:
+                print(
+                    "no info on MILP for:",
+                    file,
+                    "with fraction=",
+                    fraction,
+                    "partition_seed=",
+                    group_name[1],
+                )
+
         for row in group_df[["solver", "score"]].to_dict("split")["data"]:
             solver, score = row[0], row[1]
             scores[solver][fraction].append(float(score))
             all_scores[solver].append(float(score))
+            data.append((key, solver, score))
 
     matrix = [
         [
@@ -57,6 +86,9 @@ def stat_test(file: str):
             for i, f in enumerate(FRACTIONS):
                 if len(scores[s1][f]) != len(scores[s2][f]):
                     print("failed", s1, "vs", s2, "fraction", f)
+                    continue
+                if len(scores[s2][f]) <= 0:
+                    print(f"[{file}] no data for", s1, "vs", s2, "fraction", f)
                     continue
                 better = np.sum(scores[s1][f] >= scores[s2][f])
                 alts = []
@@ -103,17 +135,40 @@ def stat_test(file: str):
 
     with open(f"./{dst}/{filename}_stat.csv", "w") as fd:
         fd.writelines(map(lambda x: ",".join(map(str, x)) + "\n", matrix))
-    return count_matrix
+    return count_matrix, all_scores, data
 
 
 cmp_matrix = None
+all_scores = {s: [] for s in SOLVERS}
+data = []
+
 n = 0
 for file in tqdm.tqdm(glob.glob(f"{folder}/*.csv")):
-    add = stat_test(file)
+    add, dico, d = stat_test(file)
+    data += d
+    for s in SOLVERS:
+        all_scores[s] += dico[s]
     if cmp_matrix is None:
         cmp_matrix = add
     else:
         cmp_matrix += add
     n += 1
-print(cmp_matrix.tolist())
+
+with open("./global_benchmark.csv", "w") as fd:
+    fd.write("test,variant,score\n")
+    fd.write("\n".join(map(lambda x: ",".join(map(str, x)), data)))
+# print(cmp_matrix.tolist())
 print(n)
+for i, s1 in enumerate(SOLVERS):
+    for j, s2 in enumerate(SOLVERS):
+        if j <= i:
+            continue
+        alts = []
+        for alternative in [
+            "two-sided",
+            "greater",
+            "less",
+        ]:
+            stat = wilcoxon(all_scores[s1], all_scores[s2], alternative=alternative)
+            alts.append(float(stat.pvalue))
+        print(f"{s1} vs {s2} = {alts}")
