@@ -73,6 +73,8 @@ class Instance:
                     instance.store_performance(
                         h, index, i, self.performance_matrix[h, i, index]
                     )
+        for index, test in enumerate(self.tests):
+            instance.store_cost(index, 1)
         return instance
 
     def subset(self, selected_tests: List[str]) -> "Instance":
