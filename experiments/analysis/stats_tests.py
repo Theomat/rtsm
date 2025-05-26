@@ -21,7 +21,7 @@ dst = "./stats/"
 
 SOLVERS = ["bs", "rs", "pca", "greedy", "MILP"]
 THRESHOLD = 0.05
-FRACTIONS = (25, 50, 75)
+FRACTIONS = (25, 50, 75, 100)
 WA = 1
 WB = 1
 
@@ -47,12 +47,19 @@ def stat_test(file: str):
                 (df["fraction"] == fraction)
                 & (df["partition_seed"] == group_name[1])
                 & (df["solver"] == solver)
-            ]["score"]
+            ][["score", "ratio", "kendall"]]
             if len(pot_df) == 1:
-                score = pot_df.iloc[0]
+                score = pot_df.iloc[0]["score"]
                 scores[solver][fraction].append(float(score))
                 all_scores[solver].append(float(score))
-                data.append((key, solver, score))
+                data.append(
+                    (
+                        key,
+                        solver,
+                        float(pot_df.iloc[0]["ratio"]),
+                        float(pot_df.iloc[0]["kendall"]),
+                    )
+                )
             else:
                 print(
                     "no info on MILP for:",
@@ -63,11 +70,13 @@ def stat_test(file: str):
                     group_name[1],
                 )
 
-        for row in group_df[["solver", "score"]].to_dict("split")["data"]:
+        for row in group_df[["solver", "score", "ratio", "kendall"]].to_dict("split")[
+            "data"
+        ]:
             solver, score = row[0], row[1]
             scores[solver][fraction].append(float(score))
             all_scores[solver].append(float(score))
-            data.append((key, solver, score))
+            data.append((key, solver, row[2], row[3]))
 
     matrix = [
         [
@@ -155,7 +164,7 @@ for file in tqdm.tqdm(glob.glob(f"{folder}/*.csv")):
     n += 1
 
 with open("./global_benchmark.csv", "w") as fd:
-    fd.write("test,variant,score\n")
+    fd.write("test,variant,ratio,kendall\n")
     fd.write("\n".join(map(lambda x: ",".join(map(str, x)), data)))
 # print(cmp_matrix.tolist())
 print(n)
