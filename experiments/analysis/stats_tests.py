@@ -3,7 +3,6 @@
 #   "pandas",
 #   "scipy",
 #   "numpy",
-#   "tqdm"
 # ]
 # ///
 import glob
@@ -11,8 +10,8 @@ import sys
 import numpy as np
 import pandas as pd
 import os
-import tqdm
 from scipy.stats import wilcoxon
+from multiprocessing import Pool
 
 
 folder = sys.argv[1]
@@ -147,37 +146,41 @@ def stat_test(file: str):
     return count_matrix, all_scores, data
 
 
-cmp_matrix = None
-all_scores = {s: [] for s in SOLVERS}
-data = []
+if __name__ == "__main__":
+    files = list(glob.glob(f"{folder}/*.csv"))
+    with Pool() as p:
+        result = p.map(stat_test, files)
+    cmp_matrix = None
+    all_scores = {s: [] for s in SOLVERS}
+    data = []
 
-n = 0
-for file in tqdm.tqdm(glob.glob(f"{folder}/*.csv")):
-    add, dico, d = stat_test(file)
-    data += d
-    for s in SOLVERS:
-        all_scores[s] += dico[s]
-    if cmp_matrix is None:
-        cmp_matrix = add
-    else:
-        cmp_matrix += add
-    n += 1
+    n = 0
 
-with open("./global_benchmark.csv", "w") as fd:
-    fd.write("test,variant,ratio,kendall\n")
-    fd.write("\n".join(map(lambda x: ",".join(map(str, x)), data)))
-# print(cmp_matrix.tolist())
-print(n)
-for i, s1 in enumerate(SOLVERS):
-    for j, s2 in enumerate(SOLVERS):
-        if j <= i:
-            continue
-        alts = []
-        for alternative in [
-            "two-sided",
-            "greater",
-            "less",
-        ]:
-            stat = wilcoxon(all_scores[s1], all_scores[s2], alternative=alternative)
-            alts.append(float(stat.pvalue))
-        print(f"{s1} vs {s2} = {alts}")
+    for add, dico, d in result:
+        data += d
+        for s in SOLVERS:
+            all_scores[s] += dico[s]
+        if cmp_matrix is None:
+            cmp_matrix = add
+        else:
+            cmp_matrix += add
+        n += 1
+
+    with open("./global_benchmark.csv", "w") as fd:
+        fd.write("test,variant,ratio,kendall\n")
+        fd.write("\n".join(map(lambda x: ",".join(map(str, x)), data)))
+    # print(cmp_matrix.tolist())
+    print(n)
+    for i, s1 in enumerate(SOLVERS):
+        for j, s2 in enumerate(SOLVERS):
+            if j <= i:
+                continue
+            alts = []
+            for alternative in [
+                "two-sided",
+                "greater",
+                "less",
+            ]:
+                stat = wilcoxon(all_scores[s1], all_scores[s2], alternative=alternative)
+                alts.append(float(stat.pvalue))
+            print(f"{s1} vs {s2} = {alts}")
