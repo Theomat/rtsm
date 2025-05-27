@@ -105,7 +105,7 @@ class RandomSolutionSolver(Solver):
             futures = []
             # Find best among possible children
             queued = seed or 0
-            while budget > 0 and best_cost > 1:
+            while budget > 0 and initial_size > 1:
                 while len(futures) < nprocs:
                     futures.append(
                         pool.submit(
@@ -139,7 +139,7 @@ class RandomSolutionSolver(Solver):
             pool.shutdown()
 
         else:
-            while budget > 0 and best_cost > 1:
+            while budget > 0 and initial_size > 1:
                 has_found, used, out = __sample__(
                     initial_size - 1,
                     n,
