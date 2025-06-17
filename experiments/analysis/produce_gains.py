@@ -1,0 +1,154 @@
+import os
+import csv
+from multiprocessing import Pool
+import numpy as np
+
+# __HEADLINE__ = "Fraction & \\multicolumn{1}{l}{\\prefixours} & \\multicolumn{1}{l}{\\prefix{random}} & \\multicolumn{1}{l}{\\prefix{PCA}} & \\multicolumn{1}{l}{\\prefix{greedy}} & \\multicolumn{1}{l}{MILP}"
+__HEADLINE__ = "Fraction & \\multicolumn{1}{l}{MILP} & \\multicolumn{1}{l}{BS} & \\multicolumn{1}{l}{greedy} & \\multicolumn{1}{l}{PCA} & \\multicolumn{1}{l}{random}"
+
+WA, WB = 1, 1
+__PART1 = """\\begin{table}[htb]\n
+    \\centering
+    \\begin{tabular}{@{}r|lllll@{}}
+        \\toprule \\\\ """
+__PART2 = """\\\\\n\\midrule \\\\\n"""
+__PART3 = """\\\\\n\\bottomrule
+    \\end{tabular}
+    \\caption{"""
+
+
+FIGURES = False
+
+
+def make_template(headline, content, capt_name, label) -> str:
+    return (
+        __PART1
+        + headline
+        + __PART2
+        + content
+        + __PART3
+        + capt_name
+        + "}\\label{table:"
+        + label
+        + "}\n\\end{table}"
+    )
+
+
+def score(ratio: float, kendall: float) -> float:
+    return 1 - ratio
+
+
+def rename_filename(filename: str) -> str:
+    name = filename.replace("_", "-")
+    for i in range(2, 5):
+        name = name.replace(f"-q{i}", "")
+    for i in range(6, 10):
+        name = name.replace(f"-q{i}", "")
+    for i in range(11, 15):
+        name = name.replace(f"-q{i}", "")
+    if "-cost" in name:
+        name = name[: name.find("-cost")]
+
+    return name
+
+
+def to_table(
+    dico: dict[str, dict[str, list[tuple[float, float]]]],
+) -> str:
+    capt_name = "Cost reduction of different methods with all variants"
+    content = ""
+    fractions = []
+    for filename in sorted(dico.keys()):
+        name = rename_filename(filename)
+
+        fraction_elems = []
+        values = []
+        solver2index = {}
+        for solver, data in dico[filename].items():
+            values.append((np.mean(data), 1.95 * np.std(data)))
+            solver2index[solver] = len(values) - 1
+        maxi = np.max([x[0] for x in values])
+        best_index = [i for i in range(len(values)) if values[i][0] >= maxi].pop()
+        for mean, std in values:
+            is_bold = mean + std >= maxi - values[best_index][1]
+            txt = f"{mean:.2f} ({std:.2f})"
+            if is_bold:
+                txt = "\\textbf{" + txt + "}"
+            fraction_elems.append(txt)
+        assert len(fraction_elems) == 5
+        assert len(fraction_elems) == len(solver2index)
+        fractions.append(
+            " & ".join(
+                [name]
+                + [fraction_elems[solver2index[s]] for s in sorted(solver2index.keys())]
+            )
+        )
+    content = "\\\\\n".join(fractions)
+
+    out = make_template(__HEADLINE__, content, capt_name, "gain")
+    if FIGURES:
+        out += add_figures(filename)
+    return out
+
+
+def add_figures(
+    filename: str,
+) -> str:
+    out = "\n\\begin{figure}[hb]\n"
+    added = 0
+    for fraction in [25, 50, 75, 100]:
+        file = filename + f"_{fraction}.png"
+        subfigure = """\\begin{subfigure}[b]{0.5\\linewidth}
+    \\centering
+    \\includegraphics[width=\\linewidth]{./plots/"""
+        subfigure += file
+        subfigure += (
+            """} 
+    \\caption{"""
+            + f"{fraction}\\% variants"
+            + """}
+  \\end{subfigure}%\n"""
+        )
+        if os.path.exists(os.path.join("./plots", file)):
+            out += subfigure
+            added += 1
+            if added == 2:
+                out += "\\\\"
+    out += "\\caption{" + filename.replace("_", "-") + "}\n"
+    out += "\\end{figure}\n\n"
+
+    return out
+
+
+if __name__ == "__main__":
+    with open("./global_benchmark.csv") as fd:
+        rows = [x for x in csv.reader(fd)]
+        rows.pop(0)
+
+    stratified_data = {}
+
+    # test,variant,ratio,kendall
+    for row in rows:
+        test_parts = row[0].split("_")
+        #  test = f"{filename}_{fraction}_{seed}_{partition_seed}"
+        filename = "_".join(test_parts[:-3])
+        fraction = float(test_parts[-3])
+        if fraction < 100:
+            continue
+        seed = float(test_parts[-2])
+        partition_seed = float(test_parts[-1])
+        variant = row[1]
+        ratio = float(row[2])
+        kendall = float(row[3])
+
+        if filename not in stratified_data:
+            stratified_data[filename] = {}
+        if variant not in stratified_data[filename]:
+            stratified_data[filename][variant] = []
+
+        stratified_data[filename][variant].append(score(ratio, kendall))
+
+    tables = to_table(stratified_data)
+    # sorted_tables = [x[1] for x in sorted(tables)]
+    with open("./tables_gain.tex", "w") as fd:
+        fd.write(tables)

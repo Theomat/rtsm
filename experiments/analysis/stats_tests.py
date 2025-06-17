@@ -176,6 +176,9 @@ if __name__ == "__main__":
             if j <= i:
                 continue
             alts = []
+            positives = np.sum(np.asarray(all_scores[s1]) >= np.asarray(all_scores[s2]))
+            negatives = np.sum(np.asarray(all_scores[s1]) < np.asarray(all_scores[s2]))
+            effect_size = (positives - negatives) / len(all_scores[s1])
             for alternative in [
                 "two-sided",
                 "greater",
@@ -183,4 +186,4 @@ if __name__ == "__main__":
             ]:
                 stat = wilcoxon(all_scores[s1], all_scores[s2], alternative=alternative)
                 alts.append(float(stat.pvalue))
-            print(f"{s1} vs {s2} = {alts}")
+            print(f"{s1} vs {s2} (effect={effect_size}) = {alts}")

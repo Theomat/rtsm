@@ -23,11 +23,14 @@ folder = sys.argv[1]
 dst = sys.argv[2] if len(sys.argv) >= 3 else "./plots"
 pub.setup()
 
+ACCEPTED_SOLVERS = ["bs", "MILP", "rs"]
+
 
 def auto_save_fig(file: str):
     filename = os.path.basename(file)[: -len(".csv")]
     df = pd.read_csv(file)
     df["ratio"] = df["cost"] / df["total_cost"]
+    df = df[df["solver"].isin(ACCEPTED_SOLVERS)]
     df = df.sort_values(by=["solver"])
     # fraction,partition_seed,seed,solver,target_kendall,kendall,spearman,size,runtime,cost,total_cost
     for f in df["fraction"].unique():
@@ -45,8 +48,10 @@ def auto_save_fig(file: str):
             c="r",
             linestyle="dotted",
         )
-        plt.xlim(0, 1.0125)
-        plt.ylim(top=1.0125)
+        xmin, xmax = plt.xlim()
+        plt.xlim(max(xmin, 0), min(xmax, 1.0125))
+        ymin, ymax = plt.ylim()
+        plt.ylim(top=min(ymax, 1.0125))
         plt.xlabel("Cost Ratio")
         plt.ylabel("Kendall")
         plt.legend()
