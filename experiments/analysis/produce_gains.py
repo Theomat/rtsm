@@ -1,23 +1,15 @@
-import os
 import csv
-from multiprocessing import Pool
 import numpy as np
 
-# __HEADLINE__ = "Fraction & \\multicolumn{1}{l}{\\prefixours} & \\multicolumn{1}{l}{\\prefix{random}} & \\multicolumn{1}{l}{\\prefix{PCA}} & \\multicolumn{1}{l}{\\prefix{greedy}} & \\multicolumn{1}{l}{MILP}"
-__HEADLINE__ = "Fraction & \\multicolumn{1}{l}{MILP} & \\multicolumn{1}{l}{BS} & \\multicolumn{1}{l}{greedy} & \\multicolumn{1}{l}{PCA} & \\multicolumn{1}{l}{random}"
+__HEADLINE__ = "Fraction & \\multicolumn{1}{l}{MILP} & \\multicolumn{1}{l}{\\prefixours} & \\multicolumn{1}{l}{\\prefix{greedy}} & \\multicolumn{1}{l}{\\prefix{PCA}} & \\multicolumn{1}{l}{\\prefix{random}}"
 
 WA, WB = 1, 1
-__PART1 = """\\begin{table}[htb]\n
-    \\centering
-    \\begin{tabular}{@{}r|lllll@{}}
+__PART1 = """{\\centering \n
+    \\begin{longtable}{@{}r|lllll@{}}
         \\toprule \\\\ """
 __PART2 = """\\\\\n\\midrule \\\\\n"""
 __PART3 = """\\\\\n\\bottomrule
-    \\end{tabular}
     \\caption{"""
-
-
-FIGURES = False
 
 
 def make_template(headline, content, capt_name, label) -> str:
@@ -30,7 +22,7 @@ def make_template(headline, content, capt_name, label) -> str:
         + capt_name
         + "}\\label{table:"
         + label
-        + "}\n\\end{table}"
+        + "}\n\\end{longtable}\n}"
     )
 
 
@@ -55,7 +47,7 @@ def rename_filename(filename: str) -> str:
 def to_table(
     dico: dict[str, dict[str, list[tuple[float, float]]]],
 ) -> str:
-    capt_name = "Cost reduction of different methods with all variants"
+    capt_name = "Mean Cost reduction of different methods with all variants with 95\\% confidence interval in parenthesis if greater than 0. Statistically best performing methods are in \\textbf{bold}."
     content = ""
     fractions = []
     for filename in sorted(dico.keys()):
@@ -71,7 +63,7 @@ def to_table(
         best_index = [i for i in range(len(values)) if values[i][0] >= maxi].pop()
         for mean, std in values:
             is_bold = mean + std >= maxi - values[best_index][1]
-            txt = f"{mean:.2f} ({std:.2f})"
+            txt = f"{mean:.2f} ({std:.2f})".replace("(0.00)", "").strip()
             if is_bold:
                 txt = "\\textbf{" + txt + "}"
             fraction_elems.append(txt)
@@ -86,37 +78,6 @@ def to_table(
     content = "\\\\\n".join(fractions)
 
     out = make_template(__HEADLINE__, content, capt_name, "gain")
-    if FIGURES:
-        out += add_figures(filename)
-    return out
-
-
-def add_figures(
-    filename: str,
-) -> str:
-    out = "\n\\begin{figure}[hb]\n"
-    added = 0
-    for fraction in [25, 50, 75, 100]:
-        file = filename + f"_{fraction}.png"
-        subfigure = """\\begin{subfigure}[b]{0.5\\linewidth}
-    \\centering
-    \\includegraphics[width=\\linewidth]{./plots/"""
-        subfigure += file
-        subfigure += (
-            """} 
-    \\caption{"""
-            + f"{fraction}\\% variants"
-            + """}
-  \\end{subfigure}%\n"""
-        )
-        if os.path.exists(os.path.join("./plots", file)):
-            out += subfigure
-            added += 1
-            if added == 2:
-                out += "\\\\"
-    out += "\\caption{" + filename.replace("_", "-") + "}\n"
-    out += "\\end{figure}\n\n"
-
     return out
 
 
