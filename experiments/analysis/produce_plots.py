@@ -25,13 +25,28 @@ pub.setup()
 
 ACCEPTED_SOLVERS = ["bs", "MILP", "rs"]
 
+plt.rcParams["text.usetex"] = True
+
+
+def prefix(name: str) -> str:
+    return r"DCC\textsubscript{\scriptsize\textsf{\MakeUppercase{" + name + r"}}}"
+
+
+mapping = {
+    "bs": prefix("MBENCH"),
+    "MILP": "MILP",
+    "rs": prefix("random"),
+}
+
 
 def auto_save_fig(file: str):
     filename = os.path.basename(file)[: -len(".csv")]
     df = pd.read_csv(file)
     df["ratio"] = df["cost"] / df["total_cost"]
     df = df[df["solver"].isin(ACCEPTED_SOLVERS)]
-    df = df.sort_values(by=["solver"])
+    df["method"] = df["solver"].replace(mapping)
+
+    df = df.sort_values(by=["method"])
     # fraction,partition_seed,seed,solver,target_kendall,kendall,spearman,size,runtime,cost,total_cost
     for f in df["fraction"].unique():
         sub_df = df[df["fraction"] == f]
@@ -39,7 +54,7 @@ def auto_save_fig(file: str):
         pts = sub_df[["ratio", "kendall"]].to_numpy()[mask]
         indices = np.argsort(pts[:, 1])
         sns.jointplot(
-            df[df["fraction"] == f], x="ratio", y="kendall", hue="solver", alpha=0.7
+            df[df["fraction"] == f], x="ratio", y="kendall", hue="method", alpha=0.7
         )
         plt.plot(
             pts[indices, 0],
