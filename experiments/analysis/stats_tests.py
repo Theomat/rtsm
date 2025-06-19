@@ -18,7 +18,7 @@ folder = sys.argv[1]
 dst = "./stats/"
 
 
-SOLVERS = ["bs", "rs", "pca", "greedy", "MILP"]
+SOLVERS = ["bs", "rs", "pca", "greedy", "MILP", "variance", "friedman"]
 THRESHOLD = 0.05
 FRACTIONS = (25, 50, 75, 100)
 WA = 1

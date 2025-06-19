@@ -10,7 +10,7 @@ folder = sys.argv[1]
 dst = "./stats/"
 
 
-SOLVERS = ["bs", "rs", "pca", "greedy"]  # , "MILP"]
+SOLVERS = ["bs", "rs", "pca", "variance"]  # , "MILP"]
 THRESHOLD = 0.05
 FRACTIONS = (25, 50, 75, 100)
 TIMEOUT = 50 * 60
@@ -64,6 +64,19 @@ if __name__ == "__main__":
     all_rel = {s: [] for s in SOLVERS}
     files = {s: [] for s in SOLVERS}
 
+    plt.rcParams["text.usetex"] = True
+
+    def prefix(name: str) -> str:
+        return r"DCC\textsubscript{\scriptsize\textsf{\MakeUppercase{" + name + r"}}}"
+
+    mapping = {
+        "bs": prefix("MBENCH"),
+        "MILP": "MILP",
+        "rs": prefix("random"),
+        "variance": prefix("greedy"),
+        "pca": prefix("pca"),
+    }
+
     total = 0
     files = list(glob.glob(f"{folder}/*.csv"))
     with Pool() as p:
@@ -95,10 +108,10 @@ if __name__ == "__main__":
                 total[val] += 1
             X = sorted(per_value.keys())
             Y = [per_value[x] / total[x] for x in X]
-            plt.plot(X, Y, label=solver)
-        plt.title(name)
+            plt.plot(X, Y, label=mapping[solver])
+        # plt.title(name)
         plt.xlabel(name)
-        plt.ylabel("% Timeouts")
+        plt.ylabel(r"\% Timeouts")
         plt.grid()
         plt.legend()
         plt.show()

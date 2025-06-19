@@ -1,15 +1,18 @@
 import csv
 import numpy as np
 
-__HEADLINE__ = "Fraction & \\multicolumn{1}{l}{MILP} & \\multicolumn{1}{l}{\\prefixours} & \\multicolumn{1}{l}{\\prefix{greedy}} & \\multicolumn{1}{l}{\\prefix{PCA}} & \\multicolumn{1}{l}{\\prefix{random}}"
+__HEADLINE__ = "Fraction & \\multicolumn{1}{l}{MILP} & \\multicolumn{1}{l}{\\prefixours} & \\multicolumn{1}{l}{\\prefix{PCA}} & \\multicolumn{1}{l}{\\prefix{random}} & \\multicolumn{1}{l}{\\prefix{greedy}}"
 
 WA, WB = 1, 1
 __PART1 = """{\\centering \n
-    \\begin{longtable}{@{}r|lllll@{}}
+    \\begin{longtable}{@{}r|lllllll@{}}
         \\toprule \\\\ """
 __PART2 = """\\\\\n\\midrule \\\\\n"""
 __PART3 = """\\\\\n\\bottomrule
     \\caption{"""
+
+
+TO_REMOVE = set(["friedman", "greedy"])
 
 
 def make_template(headline, content, capt_name, label) -> str:
@@ -67,12 +70,17 @@ def to_table(
             if is_bold:
                 txt = "\\textbf{" + txt + "}"
             fraction_elems.append(txt)
-        assert len(fraction_elems) == 5
         assert len(fraction_elems) == len(solver2index)
+        assert len(fraction_elems) == 7
+        print(sorted(solver2index.keys()))
         fractions.append(
             " & ".join(
                 [name]
-                + [fraction_elems[solver2index[s]] for s in sorted(solver2index.keys())]
+                + [
+                    fraction_elems[solver2index[s]]
+                    for s in sorted(solver2index.keys())
+                    if s not in TO_REMOVE
+                ]
             )
         )
     content = "\\\\\n".join(fractions)
