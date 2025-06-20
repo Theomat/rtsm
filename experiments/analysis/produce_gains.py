@@ -1,3 +1,4 @@
+from collections import defaultdict
 import csv
 import numpy as np
 
@@ -5,7 +6,7 @@ __HEADLINE__ = "Fraction & \\multicolumn{1}{l}{MILP} & \\multicolumn{1}{l}{\\pre
 
 WA, WB = 1, 1
 __PART1 = """{\\centering \n
-    \\begin{longtable}{@{}r|lllllll@{}}
+    \\begin{longtable}{@{}r|llllll@{}}
         \\toprule \\\\ """
 __PART2 = """\\\\\n\\midrule \\\\\n"""
 __PART3 = """\\\\\n\\bottomrule
@@ -53,7 +54,8 @@ def to_table(
     capt_name = "Mean Cost reduction of different methods with all variants with 95\\% confidence interval in parenthesis if greater than 0. Statistically best performing methods are in \\textbf{bold}."
     content = ""
     fractions = []
-    for filename in sorted(dico.keys()):
+    totals = defaultdict(list)
+    for filename in sorted(dico.keys(), key=lambda x: x.lower()):
         name = rename_filename(filename)
 
         fraction_elems = []
@@ -62,6 +64,7 @@ def to_table(
         for solver, data in dico[filename].items():
             values.append((np.mean(data), 1.95 * np.std(data)))
             solver2index[solver] = len(values) - 1
+            totals[solver] += data
         maxi = np.max([x[0] for x in values])
         best_index = [i for i in range(len(values)) if values[i][0] >= maxi].pop()
         for mean, std in values:
@@ -72,7 +75,7 @@ def to_table(
             fraction_elems.append(txt)
         assert len(fraction_elems) == len(solver2index)
         assert len(fraction_elems) == 7
-        print(sorted(solver2index.keys()))
+        print(sorted([s for s in sorted(solver2index.keys()) if s not in TO_REMOVE]))
         fractions.append(
             " & ".join(
                 [name]
@@ -83,6 +86,26 @@ def to_table(
                 ]
             )
         )
+
+    # Global
+    fraction_elems = {}
+    dico = {solver: (np.mean(x), 1.95 * np.std(x)) for solver, x in totals.items()}
+    values = list(dico.values())
+    maxi = np.max([x[0] for x in values])
+    best_index = [i for i in range(len(values)) if values[i][0] >= maxi].pop()
+    for key, (mean, std) in dico.items():
+        is_bold = mean + std >= maxi - values[best_index][1]
+        txt = f"{mean:.2f} ({std:.2f})".replace("(0.00)", "").strip()
+        # if is_bold:
+        # txt = "\\textbf{" + txt + "}"
+        fraction_elems[key] = txt
+    fractions.append("\\midrule")
+    fractions.append(
+        " & ".join(
+            ["Average"]
+            + [fraction_elems[s] for s in sorted(totals.keys()) if s not in TO_REMOVE]
+        )
+    )
     content = "\\\\\n".join(fractions)
 
     out = make_template(__HEADLINE__, content, capt_name, "gain")
