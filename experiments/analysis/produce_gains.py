@@ -51,20 +51,27 @@ def rename_filename(filename: str) -> str:
 def to_table(
     dico: dict[str, dict[str, list[tuple[float, float]]]],
 ) -> str:
-    capt_name = "Mean Cost reduction of different methods with all variants with 95\\% confidence interval in parenthesis if greater than 0. Statistically best performing methods are in \\textbf{bold}."
+    capt_name = "Mean Cost reduction of different methods with all variants with 95\\% confidence interval in parenthesis if greater than 0. Best performing methods are in \\textbf{bold}."
     content = ""
     fractions = []
     totals = defaultdict(list)
+    totals_good = defaultdict(list)
     for filename in sorted(dico.keys(), key=lambda x: x.lower()):
         name = rename_filename(filename)
 
         fraction_elems = []
         values = []
         solver2index = {}
+        should_add = False
         for solver, data in dico[filename].items():
             values.append((np.mean(data), 1.95 * np.std(data)))
+            should_add = should_add or (max(values[-1]) > 0)
             solver2index[solver] = len(values) - 1
             totals[solver] += data
+        if should_add:
+            for solver, data in dico[filename].items():
+                totals_good[solver] += data
+
         maxi = np.max([x[0] for x in values])
         best_index = [i for i in range(len(values)) if values[i][0] >= maxi].pop()
         for mean, std in values:
@@ -96,13 +103,29 @@ def to_table(
     for key, (mean, std) in dico.items():
         is_bold = mean + std >= maxi - values[best_index][1]
         txt = f"{mean:.2f} ({std:.2f})".replace("(0.00)", "").strip()
-        # if is_bold:
-        # txt = "\\textbf{" + txt + "}"
+        if is_bold:
+            txt = "\\textbf{" + txt + "}"
         fraction_elems[key] = txt
     fractions.append("\\midrule")
     fractions.append(
         " & ".join(
             ["Average"]
+            + [fraction_elems[s] for s in sorted(totals.keys()) if s not in TO_REMOVE]
+        )
+    )
+    dico = {solver: (np.mean(x), 1.95 * np.std(x)) for solver, x in totals_good.items()}
+    values = list(dico.values())
+    maxi = np.max([x[0] for x in values])
+    best_index = [i for i in range(len(values)) if values[i][0] >= maxi].pop()
+    for key, (mean, std) in dico.items():
+        is_bold = mean + std >= maxi - values[best_index][1]
+        txt = f"{mean:.2f} ({std:.2f})".replace("(0.00)", "").strip()
+        if is_bold:
+            txt = "\\textbf{" + txt + "}"
+        fraction_elems[key] = txt
+    fractions.append(
+        " & ".join(
+            ["Average on reduced benchmarks"]
             + [fraction_elems[s] for s in sorted(totals.keys()) if s not in TO_REMOVE]
         )
     )
