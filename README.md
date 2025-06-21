@@ -14,7 +14,12 @@ Of course, this is not magic, this assumes that the next variants that are going
 
 See the associated paper for the technical details.
 
-Benchmarks are available at <https://github.com/Theomat/benchmarks-rtsm>.
+Benchmarks are available in ``../benchmarks_rtsm``.
+
+## Experiments
+
+Data is already present in the ``results`` folder.
+See the ``README.md`` in ``experiments`` for more details about the experiments.
 
 <!-- toc -->
 
