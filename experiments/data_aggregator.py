@@ -58,11 +58,12 @@ def read_file(file: str) -> dict:
                 val = float(part[part.index(":") + 1 :])
                 worst = min(val, worst)
 
+        chars = "".join([chr(83), chr(0)])
         spearman = worst
         data.append(kendall)
         data.append(spearman)
-        data.append(lines[-1])  # size
-        data.append(lines[-2])  # runtime
+        data.append(lines[-1].strip(chars))  # size
+        data.append(lines[-2].strip(chars))  # runtime
         if "\t" in data[-1] or "\t" in data[-2]:
             # We are missing size or runtime so fix this
             size, runtime = fix_size_and_runtime(file)
@@ -80,7 +81,7 @@ def read_file(file: str) -> dict:
         data.append(parts[4])
         for i in range(-8, 0):
             assert is_float(data[i]), (
-                f"failed parsing [{get_name(i)}]:{file} = <<{data[i]}>>"
+                f"failed parsing [{get_name(i)}]:{file} [{i}]= <<{data[i]}>> :{ord(data[i][0])}"
             )
 
     return {"file": filename, "data": data}
