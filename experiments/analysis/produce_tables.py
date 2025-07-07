@@ -15,7 +15,7 @@ __PART3 = """\\\\\n\\bottomrule
     \\end{tabular}
     \\caption{"""
 
-
+KENDALL = 1
 FIGURES = True
 ACCEPTED_SOLVERS = sorted(["bs", "MILP", "rs"])
 
@@ -127,8 +127,11 @@ if __name__ == "__main__":
     # test,variant,ratio,kendall
     for row in rows:
         test_parts = row[0].split("_")
-        #  test = f"{filename}_{fraction}_{seed}_{partition_seed}"
-        filename = "_".join(test_parts[:-3])
+        #  test = f"{filename}_{target}_{fraction}_{seed}_{partition_seed}"
+        filename = "_".join(test_parts[:-4])
+        target = float(test_parts[-4])
+        if target != KENDALL:
+            continue
         fraction = float(test_parts[-3])
         seed = float(test_parts[-2])
         partition_seed = float(test_parts[-1])

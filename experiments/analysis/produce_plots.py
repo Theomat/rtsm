@@ -29,7 +29,7 @@ plt.rcParams["text.usetex"] = True
 
 
 def prefix(name: str) -> str:
-    return r"DCC\textsubscript{\scriptsize\textsf{\MakeUppercase{" + name + r"}}}"
+    return r"\MakeUppercase{" + name + r"}"
 
 
 mapping = {
@@ -44,6 +44,7 @@ def auto_save_fig(file: str):
     df = pd.read_csv(file)
     df["ratio"] = df["cost"] / df["total_cost"]
     df = df[df["solver"].isin(ACCEPTED_SOLVERS)]
+    df = df[df["target_kendall"] == 1]
     df["method"] = df["solver"].replace(mapping)
 
     df = df.sort_values(by=["method"])
