@@ -15,6 +15,8 @@ __PART3 = """\\\\\n\\bottomrule
 
 TO_REMOVE = set(["friedman", "greedy"])
 
+KENDALL = 99
+
 
 def make_template(headline, content, capt_name, label) -> str:
     return (
@@ -81,7 +83,7 @@ def to_table(
                 txt = "\\textbf{" + txt + "}"
             fraction_elems.append(txt)
         assert len(fraction_elems) == len(solver2index)
-        assert len(fraction_elems) == 7
+        # assert len(fraction_elems) == 7
         print(sorted([s for s in sorted(solver2index.keys()) if s not in TO_REMOVE]))
         fractions.append(
             " & ".join(
@@ -145,8 +147,11 @@ if __name__ == "__main__":
     # test,variant,ratio,kendall
     for row in rows:
         test_parts = row[0].split("_")
-        #  test = f"{filename}_{fraction}_{seed}_{partition_seed}"
-        filename = "_".join(test_parts[:-3])
+        #  test = f"{filename}_{target}_{fraction}_{seed}_{partition_seed}"
+        filename = "_".join(test_parts[:-4])
+        target = float(test_parts[-4])
+        if target != KENDALL:
+            continue
         fraction = float(test_parts[-3])
         if fraction < 100:
             continue
@@ -165,5 +170,5 @@ if __name__ == "__main__":
 
     tables = to_table(stratified_data)
     # sorted_tables = [x[1] for x in sorted(tables)]
-    with open("./tables_gain.tex", "w") as fd:
+    with open(f"./tables_gain_{KENDALL}.tex", "w") as fd:
         fd.write(tables)
