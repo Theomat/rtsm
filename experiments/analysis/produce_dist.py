@@ -18,7 +18,7 @@ plt.rcParams["text.usetex"] = True
 
 
 def prefix(name: str) -> str:
-    return r"DCC\textsubscript{\scriptsize\textsf{\MakeUppercase{" + name + r"}}}"
+    return r"\MakeUppercase{" + name + r"}"
 
 
 mapping = {
@@ -40,6 +40,8 @@ if __name__ == "__main__":
     )
     df["fraction"] = df["test"].str.split("_").str[-3]
     df = df[df["variant"].isin(ACCEPTED_SOLVERS)]
+    # KENDALL = 99 UNCOMMENT
+    # df = df[df["test"].str.contains("_99_")]
 
     df["method"] = df["variant"].replace(mapping)
 
