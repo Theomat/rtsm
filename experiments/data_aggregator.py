@@ -27,6 +27,13 @@ def fix_size_and_runtime(file: str) -> tuple[int, float]:
         size = len(list(data["solutions"]).pop())
     return size, runtime
 
+def try_get_improved(file: str) -> tuple[bool, int]:
+    with open(file.replace(".tmp", ".json")) as fd:
+        data = json.load(fd)
+        if "improved" in data:
+            return True, int(data["improved"])
+    return False, 0
+
 
 def read_file(file: str) -> dict:
     parts = [x for x in file.split(".")[:-1] if len(x) > 0]
@@ -44,7 +51,7 @@ def read_file(file: str) -> dict:
         lines = [x.strip("\n ") for x in fd.readlines() if len(x.strip("\n ")) > 0]
         if len(lines) <= 2:
             print("skipping:", file)
-            return {}
+            return {}, (False, False)
         kendalls = [
             line[line.index(":") + 1 :].strip() for line in lines if "Kendall" in line
         ]
@@ -83,8 +90,9 @@ def read_file(file: str) -> dict:
             assert is_float(data[i]), (
                 f"failed parsing [{get_name(i)}]:{file} [{i}]= <<{data[i]}>> :{ord(data[i][0])}"
             )
+    r = try_get_improved(file)
 
-    return {"file": filename, "data": data}
+    return {"file": filename, "data": data}, r
 
 
 if __name__ == "__main__":
@@ -99,14 +107,19 @@ if __name__ == "__main__":
 
     content = defaultdict(list)
     skipped = 0
+    scores = []
     for file in tqdm.tqdm(glob.glob(f"{folder}/*.tmp")):
-        dico = read_file(file)
+        dico, r = read_file(file)
+        if r[0]:
+            scores.append(r[1])
         if len(dico) == 0:
             skipped += 1
             continue
         file = dico["file"] + ".csv"
         content[file].append(dico["data"])
     print(skipped, "files skipped because solution check failed!")
+    with open("./improvements.txt", "w") as fd:
+        fd.writelines("\n".join(map(str, scores)))
     for file, lines in content.items():
         with open(os.path.join(DST, file), "w") as fd:
             writer = csv.writer(fd)
