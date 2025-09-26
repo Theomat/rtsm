@@ -2,6 +2,9 @@
 *.sl
 *.json
 *.sh
+*.csv
+*.tmp
+*.png
 csv_data/
 results/
 
