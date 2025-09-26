@@ -53,11 +53,12 @@ class LogisticBooleanPredictor(Predictor):
         X = self.Xt[:, :, mask]
         Y = self.Yt[:, :, ~mask]
         cp = self.Xt.copy()
+        a = cp[:, :, ~mask]
 
         for h in range(X.shape[0]):
             for i in range(Y.shape[-1]):
                 pred, error = __learn_boolean_linear_model__(
                     X[h, :, :], Y[h, :, i].reshape((-1))
                 )
-                cp[:, :, mask][:, :, i] = pred
+                a[:, :, i] = pred
         return to_ranking(np.sum(cp, axis=-1))
