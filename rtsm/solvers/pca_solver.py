@@ -20,9 +20,9 @@ class PCASolver(DeterministicSolver):
     def __choose_index_to_remove__(
         self, current: np.ndarray, predictor: Predictor
     ) -> Optional[int]:
-        assert (
-            self.instance.performance_matrix.shape[0] == 1
-        ), "PCASolver: does not support multiple performance measures"
+        assert self.instance.performance_matrix.shape[0] == 1, (
+            "PCASolver: does not support multiple performance measures"
+        )
         X = self.instance.performance_matrix[0, :, current].T
         model = PCA()
         Xt = model.fit_transform(X)

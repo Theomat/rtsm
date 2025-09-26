@@ -7,11 +7,9 @@ from multiprocessing import Pool
 
 
 folder = sys.argv[1]
-dst = "./stats/"
 
 
-SOLVERS = ["bs", "rs", "pca", "variance"]  # , "MILP"]
-THRESHOLD = 0.05
+SOLVERS = ["bs", "rs", "pca", "variance", "MILP"]
 FRACTIONS = (25, 50, 75, 100)
 TIMEOUT = 50 * 60
 
@@ -67,7 +65,7 @@ if __name__ == "__main__":
     plt.rcParams["text.usetex"] = True
 
     def prefix(name: str) -> str:
-        return r"DCC\textsubscript{\scriptsize\textsf{\MakeUppercase{" + name + r"}}}"
+        return r"\MakeUppercase{" + name + r"}"
 
     mapping = {
         "bs": prefix("MBENCH"),

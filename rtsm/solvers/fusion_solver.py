@@ -175,11 +175,14 @@ class FusionSolver(Solver):
     ) -> Set[Solution]:
         self.instance = instance
         total_cost = instance.total_cost()
+
         self.split_manager = Fusion(instance, self.splits, seed, predictor_builder)
+        if instance.total_cost() <= 0:
+            return self.__get_solutions__()
         best_score = self.split_manager.current_best_score()
         if verbose:
             print(
-                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_score}{F.RESET} ({F.LIGHTCYAN_EX}{best_score/ total_cost:.1%}{F.RESET})"
+                f"{self._get_print_prefix_()}{F.LIGHTCYAN_EX}[info]{F.RESET} init: {F.LIGHTCYAN_EX}{best_score}{F.RESET} ({F.LIGHTCYAN_EX}{best_score / total_cost:.1%}{F.RESET})"
             )
         pbar = ProgressBar(
             total=(self.splits * 2 - 1),

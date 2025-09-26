@@ -64,7 +64,7 @@ if __name__ == "__main__":
             sys.exit(1)
         one_sol = solution_list[0]
         print(
-            f"loaded solution of size {F.CYAN}{len(one_sol)}{F.RESET} ({F.CYAN}{len(one_sol)/len(instance.tests):.1%}{F.RESET})"
+            f"loaded solution of size {F.CYAN}{len(one_sol)}{F.RESET} ({F.CYAN}{len(one_sol) / len(instance.tests):.1%}{F.RESET})"
         )
     # Build predictor
     predictor: Predictor = predictors[predictor_name](instance)

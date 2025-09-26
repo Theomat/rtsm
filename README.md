@@ -101,7 +101,3 @@ python -m rtsm.export ./examples/x264_etime.csv my_solution.json  -o dst.json
 What if you wanted to minimise the test set for two performance metrics? Well if both performance metrics are in your input file, that will be done automatically, you have nothing to do!
 
 For multiple performance metrics, the accuracy parameter is such that the worse accuracy among all performance metrics is greater than this accuracy threshold.
-
-### Genetic Algorithm
-
-There is a GA solver, which is available only if [PyGAD](https://pygad.readthedocs.io/en/latest/index.html) is installed. However, it is not recommended as it is **dramatically slower** and offers **dramatically worse** performances than other methods. In other words, we did not manage to make it work despite our attempts. If you find a set of parameters that make genetic algorithms work, please reach out or contribute.

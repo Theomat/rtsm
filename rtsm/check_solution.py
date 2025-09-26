@@ -106,7 +106,7 @@ if __name__ == "__main__":
             sys.exit(1)
         one_sol = solution_list[0]
         print(
-            f"loaded solution of size {F.CYAN}{len(one_sol)}{F.RESET} ({F.CYAN}{len(one_sol)/len(instance.tests):.1%}{F.RESET})"
+            f"loaded solution of size {F.CYAN}{len(one_sol)}{F.RESET} ({F.CYAN}{len(one_sol) / len(instance.tests):.1%}{F.RESET})"
         )
     # Build predictor
     predictor: Predictor = predictors[predictor_name](instance)
@@ -118,11 +118,11 @@ if __name__ == "__main__":
     my_sol = Solution(instance, tuple(one_sol))
     for perf, (val, total) in my_sol.measure_performances().items():
         print(
-            f"\t{perf}: {F.GREEN}{val:.2}{F.RESET} / {F.CYAN}{total:.2}{F.RESET} ({F.GREEN}{val/total:.2%}{F.RESET})"
+            f"\t{perf}: {F.GREEN}{val:.2}{F.RESET} / {F.CYAN}{total:.2}{F.RESET} ({F.GREEN}{val / total:.2%}{F.RESET})"
         )
     print(
         "cost:",
-        f"{F.GREEN}{my_sol.cost():.2}{F.RESET} / {F.CYAN}{instance.total_cost():.2}{F.RESET} ({F.GREEN}{my_sol.cost()/instance.total_cost():.2%}{F.RESET})",
+        f"{F.GREEN}{my_sol.cost():.2}{F.RESET} / {F.CYAN}{instance.total_cost():.2}{F.RESET} ({F.GREEN}{my_sol.cost() / instance.total_cost():.2%}{F.RESET})",
     )
     R = to_ranking(np.sum(instance.performance_matrix, axis=-1))
     ranks_original = to_ranks(R)
@@ -132,8 +132,8 @@ if __name__ == "__main__":
     sR = to_ranking(np.sum(instance.subset(one_sol).performance_matrix, axis=-1))
     ranks_no_pred = to_ranks(sR)
     print("without prediction:")
-    print(f"\taccuracy: {F.GREEN}{1-accuracy_error(R, sR):.2%}{F.RESET}")
-    print(f"\tKendall coefficient: {F.GREEN}{1-kendall(R, sR):.2}{F.RESET}")
+    print(f"\taccuracy: {F.GREEN}{1 - accuracy_error(R, sR):.2%}{F.RESET}")
+    print(f"\tKendall coefficient: {F.GREEN}{1 - kendall(R, sR):.2}{F.RESET}")
 
     def spearman_to_str(rankA, rankB):
         out = []
@@ -155,8 +155,8 @@ if __name__ == "__main__":
     error = accuracy_error(R, ranking_pred)
     ranks_pred = to_ranks(ranking_pred)
     print(f"({F.LIGHTYELLOW_EX}{duration:.2f}{F.RESET}s):")
-    print(f"\taccuracy: {F.GREEN}{1-error:.2%}{F.RESET}")
-    print(f"\tKendall coefficient: {F.GREEN}{1-kendall(R, ranking_pred):.2}{F.RESET}")
+    print(f"\taccuracy: {F.GREEN}{1 - error:.2%}{F.RESET}")
+    print(f"\tKendall coefficient: {F.GREEN}{1 - kendall(R, ranking_pred):.2}{F.RESET}")
 
     spearman_desc = spearman_to_str(ranks_original, ranks_pred)
     print(f"\tSpearman: {spearman_desc}")
@@ -181,7 +181,7 @@ if __name__ == "__main__":
         Rpred = to_ranking(predicted_sum)
         ranks_pred = to_ranks(Rpred)
         error = accuracy_error(R, Rpred)
-        print(f"\taccuracy: {F.GREEN}{1-error:.2%}{F.RESET}")
-        print(f"\tKendall coefficient: {F.GREEN}{1-kendall(R, Rpred):.2}{F.RESET}")
+        print(f"\taccuracy: {F.GREEN}{1 - error:.2%}{F.RESET}")
+        print(f"\tKendall coefficient: {F.GREEN}{1 - kendall(R, Rpred):.2}{F.RESET}")
         spearman_desc = spearman_to_str(ranks_original, ranks_pred)
         print(f"\tSpearman: {spearman_desc}")
