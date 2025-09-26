@@ -136,7 +136,7 @@ if __name__ == "__main__":
             instance.set_start(one_sol)
             if verbose:
                 print(
-                    f"used start solution to go from {F.CYAN}{len(instance.tests)}{F.RESET} tests to {F.CYAN}{len(one_sol)}{F.RESET} ({F.CYAN}{len(one_sol)/ len(instance.tests):.1%}{F.RESET}) tests"
+                    f"used start solution to go from {F.CYAN}{len(instance.tests)}{F.RESET} tests to {F.CYAN}{len(one_sol)}{F.RESET} ({F.CYAN}{len(one_sol) / len(instance.tests):.1%}{F.RESET}) tests"
                 )
 
     if verbose:
@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
     start = time.perf_counter_ns()
 
-    def save(sols):
+    def save(sols, **kwargs):
         end = time.perf_counter_ns() - start
         with open(args.output, "w") as fd:
             json.dump(
@@ -177,6 +177,7 @@ if __name__ == "__main__":
                     "base_solver": args.solver,
                     "predictor": args.predictor,
                     "accuracy": accuracy,
+                    **kwargs,
                 },
                 fd,
             )
@@ -190,7 +191,7 @@ if __name__ == "__main__":
             print(
                 f"{F.YELLOW}warning:{F.RESET} early stopping, results were still saved!"
             )
-        save(sols)
+        save(sols, improved=improved)
 
     if not no_autosave:
         atexit.register(save_result_pre_emptively)
@@ -203,6 +204,7 @@ if __name__ == "__main__":
     solutions = set()
     i = 0
     last_with_progress = i
+    improved = 0
     while i - last_with_progress < tries:
         solver.splits = sum(instance.warm_start()) // size
         solutions = solver.solve(
@@ -222,8 +224,9 @@ if __name__ == "__main__":
         new_cost = one_sol.cost()
         if new_cost < current_cost:
             if not no_autosave:
-                save(solutions)
+                save(solutions, improved=improved)
             last_with_progress = i
+            improved += 1
             instance.set_start(one_sol.tests)
             current_cost = new_cost
             if len(one_sol.tests) // size <= 1:
@@ -241,9 +244,9 @@ if __name__ == "__main__":
                 f"found {F.GREEN}{len(solutions)}{F.RESET} solution{'s' if len(solutions) > 1 else ''}"
             )
             print(
-                f"the minimal cost solution found is {F.GREEN}{best_cost}{F.RESET} ({F.GREEN}{best_cost/ instance.total_cost():.1%}{F.RESET})"
+                f"the minimal cost solution found is {F.GREEN}{best_cost}{F.RESET} ({F.GREEN}{best_cost / instance.total_cost():.1%}{F.RESET})"
             )
     # Save solution
-    save(solutions)
+    save(solutions, improved=improved)
     if verbose:
         print(f"saved to {F.GREEN}{args.output}{F.RESET}")
