@@ -15,7 +15,7 @@ __PART3 = """\\\\\n\\bottomrule
 
 TO_REMOVE = set(["friedman", "greedy"])
 
-KENDALL = 99
+KENDALL = 1
 
 
 def make_template(headline, content, capt_name, label) -> str:
@@ -54,6 +54,7 @@ def to_table(
     dico: dict[str, dict[str, list[tuple[float, float]]]],
 ) -> str:
     capt_name = "Mean Cost reduction of different methods with all variants with 95\\% confidence interval in parenthesis if greater than 0. Best performing methods are in \\textbf{bold}."
+    capt_name = "Mean Cost reduction of different methods with all variants with 95\\% confidence interval in parenthesis if greater than 0."
     content = ""
     fractions = []
     totals = defaultdict(list)
@@ -79,8 +80,8 @@ def to_table(
         for mean, std in values:
             is_bold = mean + std >= maxi - values[best_index][1]
             txt = f"{mean:.2f} ({std:.2f})".replace("(0.00)", "").strip()
-            if is_bold:
-                txt = "\\textbf{" + txt + "}"
+            # if is_bold:
+            #     txt = "\\textbf{" + txt + "}"
             fraction_elems.append(txt)
         assert len(fraction_elems) == len(solver2index)
         # assert len(fraction_elems) == 7
@@ -112,7 +113,7 @@ def to_table(
     fractions.append(
         " & ".join(
             ["Average"]
-            + [fraction_elems[s] for s in sorted(totals.keys()) if s not in TO_REMOVE]
+            # + [fraction_elems[s] for s in sorted(totals.keys()) if s not in TO_REMOVE]
         )
     )
     dico = {solver: (np.mean(x), 1.95 * np.std(x)) for solver, x in totals_good.items()}
@@ -122,15 +123,15 @@ def to_table(
     for key, (mean, std) in dico.items():
         is_bold = mean + std >= maxi - values[best_index][1]
         txt = f"{mean:.2f} ({std:.2f})".replace("(0.00)", "").strip()
-        if is_bold:
-            txt = "\\textbf{" + txt + "}"
+        # if is_bold:
+        #     txt = "\\textbf{" + txt + "}"
         fraction_elems[key] = txt
-    fractions.append(
-        " & ".join(
-            ["Average on reduced benchmarks"]
-            + [fraction_elems[s] for s in sorted(totals.keys()) if s not in TO_REMOVE]
-        )
-    )
+    # fractions.append(
+    #     " & ".join(
+    #         ["Average on reduced benchmarks"]
+    #         + [fraction_elems[s] for s in sorted(totals.keys()) if s not in TO_REMOVE]
+    #     )
+    # )
     content = "\\\\\n".join(fractions)
 
     out = make_template(__HEADLINE__, content, capt_name, "gain")
