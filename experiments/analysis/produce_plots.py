@@ -33,9 +33,9 @@ def prefix(name: str) -> str:
 
 
 mapping = {
-    "bs": prefix("MBENCH"),
+    "bs": "BISS",
     "MILP": "MILP",
-    "rs": prefix("random"),
+    "rs": "RANDOM",
 }
 
 
