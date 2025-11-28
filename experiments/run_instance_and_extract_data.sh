@@ -30,7 +30,7 @@ if [ ! -f "$DATA_FILE" ]; then
         full_instance_file=${full_instance_file%%"_cutoff"*}.csv
     fi
 
-    python -m rtsm.check_solution $4 $SOL_FILE --full $full_instance_file > $DATA_FILE || rm $DATA_FILE
+    python -m rtsm.check_solution --predictor weighted $4 $SOL_FILE --full $full_instance_file > $DATA_FILE || rm $DATA_FILE
     if [ -f $DATA_FILE ]; then
         runtime=$(cat $SOL_FILE | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["runtime"])')
         size=$(cat $SOL_FILE | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(len(obj["solutions"][0]))')
