@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import numpy as np
 
 from aslib_scenario import ASlibScenario
 
@@ -46,18 +47,26 @@ for seed in range(1, 11):
         out[i] = val
     all.append(out)
 
-for i in range(len(order)):
-    mini = min(x[i] for x in all)
-    maxi = max(x[i] for x in all)
+values = []
+for meta in [min, np.median, np.mean, max]:
+    local = []
+    for i in range(len(order)):
+        data = [x[i] for x in all]
+        val = meta(data)
 
-    for x in all:
-        v = x[i]
-        x[i] = f"{v:.2%}".replace("%", "\\%")
-        if v <= mini:
-            x[i] = "\\underline{" + x[i] + "}"
+        local.append(f"{val:.2%}".replace("%", "\\%"))
+    values.append(local)
+        # mini = min(x[i] for x in all)
+        # maxi = max(x[i] for x in all)
 
-        if v >= maxi:
-            x[i] = "\\textbf{" + x[i] + "}"
+        # for x in all:
+        #     v = x[i]
+        #     x[i] = f"{v:.2%}".replace("%", "\\%")
+        #     if v <= mini:
+        #         x[i] = "\\underline{" + x[i] + "}"
 
-for out in all:
+        #     if v >= maxi:
+        #         x[i] = "\\textbf{" + x[i] + "}"
+
+for out in values:
     print(" & ".join(out) + "\\\\")
