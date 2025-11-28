@@ -3,7 +3,7 @@ import json
 import sys
 import glob
 
-COLUMNS = "fraction,partition_seed,seed,solver,target_kendall,kendall,spearman,size,runtime,cost,total_cost,variants,tests".split(
+COLUMNS = "fraction,partition_seed,seed,solver,target_kendall,kendall,spearman,size,runtime,cost,total_cost,variants,tests,delta_cost".split(
     ","
 )
 
@@ -90,6 +90,7 @@ def read_file(file: str) -> dict:
             assert is_float(data[i]), (
                 f"failed parsing [{get_name(i)}]:{file} [{i}]= <<{data[i]}>> :{ord(data[i][0])}"
             )
+        data.append(float(total_cost) - float(sol_cost))
     r = try_get_improved(file)
 
     return {"file": filename, "data": data}, r
