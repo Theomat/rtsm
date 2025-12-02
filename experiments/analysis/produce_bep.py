@@ -12,9 +12,12 @@ pub.setup()
 
 dst_folder = "plots"
 
-KENDALL= 1
+KENDALL = 99
 SOLVERS = ["bs", "rs", "pca", "greedy", "MILP"]
 FRACTION = 100
+
+PENALIZATION = 1
+
 
 def break_even(csv_path, target_kendall=KENDALL, fraction=FRACTION):
     df = pd.read_csv(csv_path)
@@ -24,22 +27,31 @@ def break_even(csv_path, target_kendall=KENDALL, fraction=FRACTION):
 
     if df.empty:
         print("No rows found for this target_kendall and fraction.")
-        return {s: [] for s in SOLVERS}
+        return {s: [] for s in SOLVERS}, 0
 
     df = df.copy()
     df = df[df["delta_cost"].astype(float) > 0]  # avoid division issues
 
     if df.empty:
-        print(f"All rows have non-positive delta cost. Cannot compute break-even for {csv_path}.")
-        return {s: [] for s in SOLVERS}
+        # print(
+        #     f"All rows have non-positive delta cost. Cannot compute break-even for {csv_path}."
+        # )
+        return {s: [] for s in SOLVERS}, 0
+    print(csv_path)
+    total = df["total_cost"].max()
 
-    df["break_even"] = df["runtime"] / df["delta_cost"]
-    return  (
-        df.groupby("solver")["break_even"]
-        .apply(list)
-        .to_dict()
-    )
-
+    df["break_even"] = df["runtime"] / (total - df["cost"])
+    data = df.groupby("solver")["break_even"].apply(list).to_dict()
+    max_len = max(len(lst) for lst in data.values())
+    max_value = PENALIZATION * max(max(lst) for lst in data.values())
+    pad_value = -1
+    for key, lst in data.items():
+        print("\tfilled:", (max_len - len(lst)), "for", key)
+        lst.extend([pad_value] * (max_len - len(lst)))
+    for s in SOLVERS:
+        if s not in data:
+            data[s] = [pad_value] * max_len
+    return data, max_value
 
 
 def plot_bep(bep):
@@ -58,7 +70,6 @@ def plot_bep(bep):
         showmeans=False,
         showmedians=True,
         showextrema=True,
-    
     )
 
     colors = pub.get_color_cycle()
@@ -152,7 +163,7 @@ if __name__ == "__main__":
         "bs": "BISS",
         "MILP": "MILP",
         "rs": "RANDOM",
-        "variance": ("GREEDY"),
+        "greedy": ("GREEDY"),
         "pca": ("PCA"),
     }
 
@@ -161,11 +172,13 @@ if __name__ == "__main__":
     print("Kept", len(files), "benchmarks:", files)
     with Pool() as p:
         result = p.map(break_even, files)
-    for dico in result:
+    true_max = -1
+    for (dico, maxi) in result:
+        true_max = max(true_max, maxi)
         for s in SOLVERS:
             bep[s] += dico.get(s, [])
             # if timeouts > 0:
             #     files[s].append(file)
+    for s in SOLVERS:
+        bep[s] = [true_max if x <= 0 else x for x in bep[s]]
     plot_bep(bep)
-
-
